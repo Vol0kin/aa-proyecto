@@ -9,9 +9,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, learning_curve
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, learning_curve, \
+    cross_val_predict
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -147,7 +150,7 @@ def create_rf_pipeline(n_estimators_list):
     return pipelines
 
 
-def create_nn_pipeline(hidden_layer_sizes_list):
+def create_nn_pipeline(hidden_layer_sizes_list, early_stopping=False):
     """
     Funcion para crear una lista de pipelines con el modelo de Neural
     Network dados un valores que determinan el tamaño de las capas ocultas,
@@ -166,7 +169,8 @@ def create_nn_pipeline(hidden_layer_sizes_list):
     for hidden_layer_sizes in hidden_layer_sizes_list :
         pipelines.append(
             make_pipeline(StandardScaler(), PCA(n_components=0.95),
-                          MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, random_state=1)))
+                          MLPClassifier(hidden_layer_sizes=hidden_layer_sizes,
+                                        early_stopping=early_stopping, random_state=1)))
 
     return pipelines
 
@@ -210,11 +214,29 @@ def evaluate_models(models, X, y, model_names, cv=10, metric='neg_mean_absolute_
         # Guardar desviaciones
         deviations.append(np.std(results))
 
-        plot_learning_curve(model, model_names[idx], X, y, cv=cv)
-
+        # plot_learning_curve(model, model_names[idx], X_train, y_train, cv=cv)
 
     return means, deviations
 
+
+def prediction_evaluated_models(models, X, y, model_names, cv=10):
+    for idx, model in enumerate(models):
+        expected = y
+        predicted = cross_val_predict(model, X, y, cv=cv)
+
+        # plot_learning_curve(model, model_names[idx], X, y, cv=cv)
+
+        print("\n\n",model_names[idx])
+        print("Classification report:\n%s\n"
+              % (metrics.classification_report(expected, predicted)))
+
+        precision, recall, fscore, support = precision_recall_fscore_support(expected, predicted, average='macro')
+        print('Precision : {}'.format(precision))
+        print('Recall    : {}'.format(recall))
+        print('F-score   : {}'.format(fscore))
+        print('Support   : {}'.format(support))
+
+        print("\n\nConfusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
 
 
 ##################################################################
@@ -272,6 +294,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 
 
+
 #########################################################
 # Lectura de los datos
 df1 = read_data_values('datos/segmentation.data')
@@ -324,11 +347,14 @@ c_list = [0.1, 1.0, 5.0]
 n_estimators_list = [10, 25, 50, 100]
 hidden_layer_sizes_list = [10, 38, 100]
 
+
+
 # Asignamos nombres a los modelos
 model_names = ['LR c = 0.1', 'LR c = 1.0', 'LR c = 5.0',
                'SVMC c = 0.1', 'SVMC c = 1.0', 'SVMC c = 5.0',
                'RF n_estimators = 10', 'RF n_estimators = 25', 'RF n_estimators = 50', 'RF n_estimators = 100',
-               'NN hidden_layer_sizes = 10', 'NN hidden_layer_sizes = 38', 'NN hidden_layer_sizes = 100']
+               'NN hidden_layer_sizes = 10', 'NN hidden_layer_sizes = 38', 'NN hidden_layer_sizes = 100',
+               'NN hidden_layer_sizes = 10-es', 'NN hidden_layer_sizes = 38-es', 'NN hidden_layer_sizes = 100-es']
 
 # Crear 10-fold que conserva la proporcion
 cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
@@ -338,8 +364,9 @@ lr_pipe = create_lr_pipeline(c_list)
 svmc_pipe = create_svmc_pipeline(c_list)
 rf_pipe = create_rf_pipeline(n_estimators_list)
 nn_pipe = create_nn_pipeline(hidden_layer_sizes_list)
+nn_pipe_es = create_nn_pipeline(hidden_layer_sizes_list, early_stopping=True)
 
-models = lr_pipe + svmc_pipe + rf_pipe + nn_pipe
+models = lr_pipe + svmc_pipe + rf_pipe + nn_pipe + nn_pipe_es
 
 # Obtener valores medios, desviaciones y curvas de aprendizaje de los modelos
 print('Evaluating models...')
@@ -349,6 +376,13 @@ means, deviations = evaluate_models(models, X_train, y_train,
 
 # Mostrar valores por pantalla
 print_evaluation_results(model_names, means, deviations, 'Mean Accuracy')
+
+
+predicted_models_names = ['NN hidden_layer_sizes = 10', 'NN hidden_layer_sizes = 38',
+                          'NN hidden_layer_sizes = 100']
+predicted_models = nn_pipe
+prediction_evaluated_models(predicted_models, X_test, y_test, predicted_models_names, cv)
+
 
 input('---Press any key to continue---\n\n')
 
