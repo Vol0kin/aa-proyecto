@@ -273,12 +273,19 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 
 #########################################################
-# Lectura y previsualizacion inicial de los datos
+# Lectura de los datos
 df1 = read_data_values('datos/segmentation.data')
 df2 = read_data_values('datos/segmentation.test')
 df = pd.concat([df1,df2])
-# print(df)
 
+#########################################################
+# Creamos mapa para cambiar los valores de las etiquetas
+
+labels_to_values = { 'BRICKFACE' : 0, 'SKY' : 1, 'FOLIAGE' : 2, 'CEMENT' : 3,
+                     'WINDOW' : 4, 'PATH' : 5, 'GRASS' : 6 }
+
+# Sustituir etiquetas de salida por valores numericos discretos
+df[0] = df[0].map(labels_to_values)
 
 
 #########################################################
@@ -287,9 +294,11 @@ df = pd.concat([df1,df2])
 # Obtener valores X, Y
 X, y = divide_data_labels(df)
 
-# Dividir los datos en training y test
+# Dividir los datos en training y test conservando proporcionalidad
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
-                                                    random_state=1, shuffle=True)
+                                                    random_state=1,
+                                                    shuffle=True,
+                                                    stratify=y)                # Estratificar 
 
 # Crear DataFrame con los datos de training
 train_df = pd.DataFrame(data=np.c_[X_train, y_train])
@@ -298,19 +307,10 @@ train_df = pd.DataFrame(data=np.c_[X_train, y_train])
 test_df = pd.DataFrame(data=np.c_[X_test, y_test])
 
 
-
 #########################################################
-# Creamos mapa para cambiar los valores de las etiquetas
-labels_to_values = { 'BRICKFACE' : 0, 'SKY' : 1, 'FOLIAGE' : 2, 'CEMENT' : 3,
-                     'WINDOW' : 4, 'PATH' : 5, 'GRASS' : 6 }
-
-# Aplicamos el mapa a las etiquetas
-df[0] = df[0].map(labels_to_values)
-
-
-# Obtener tabla de correlación de Pearson
-corr = df.corr()
-# print(corr)
+# Obtener matriz de correlacion de Pearson
+corr = train_df.corr()
+print(corr)
 
 input('---Press any key to continue---\n\n')
 
