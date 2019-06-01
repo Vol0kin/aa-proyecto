@@ -80,47 +80,76 @@
 
 \section{\textsc{Descripción del problema}}
 
-El conjunto de datos con el que vamos a trabajar es el \textit{Image Segmentation Data Set}, creado por Vision Group de la Univesidad de Massachusetts, y contiene una serie de características de casos extraídos al azar de una base de datos con 7 tipos de imágenes al aire libre. Éstas imágenes fueron segmentadas manualmente para crear una clasificación para cada pixel. Cada instancia es una región de 3x3.
+El conjunto de datos con el que vamos a trabajar es el \textit{Image Segmentation Data Set}, creado por Vision Group de la Univesidad
+de Massachusetts, y contiene una serie de características de casos extraídos al azar de una base de datos con 7 tipos de imágenes al
+aire libre. Éstas imágenes fueron segmentadas manualmente para crear una clasificación para cada pixel. Cada instancia es una región
+de $3 \times 3$.
 
-Originalmente, nuestro conjunto de datos estaba ya dividido en training y test, sin embargo, disponemos de 210 datos de entrenamiento por 2100 para test. Como está muy descompensado, vamos a juntar los dos en un dólo conjunto de datos y posteriormente realizaremos la división. Por tanto, podemos decir que nuestro conjunto de datos estará compuesto por 2310 datos y 19 atributos, los valores de los cuáles son todos números reales. Los datos de la primera columna se corresponden con la información de salida, mientras que las 19  columnas restantes pertenecen a los datos de entrada.
+Originalmente, nuestro conjunto de datos estaba ya dividido en training y test. Sin embargo, disponemos solo de 210 datos de
+entrenamiento y 2100 de test. Como la cantidad de datos que tenemos para entrenamiento es muy inferior a la de test, y no existe
+un motivo justificado por el que las particiones se hayan hecho de esta forma, hemos decidido juntar los datos y crear nuestras
+propias particiones de entrenamiento y test. Esta división se volverá a comentar en secciones posteriores. 
 
-Veamos ahora a qué pertenece cada una de las 19 características mencionadas anteriormente, ordenadas por su número de columna:
+Por tanto, si analizamos los dos conjuntos de datos de forma conjunta, podemos ver que disponemos de 2310 muestras con 19 atributos
+cada una, los valores de los cuáles son todos valores reales. Tal y como están originalmente los datos, la primera columna se
+corresponde con la clase y las 19 columnas restantes son los datos de entrada.
+
+Según la información proporcionada por la descripción del conjunto de datos, la cuál puede ser encontrada en el repositorio UCI
+\cite{bib:uci-repo}, existen 7 clases distintas, y hay 30 muestras de cada clase en el conjunto de entrenamiento y 300 en el conjunto
+de test. Con lo cuál, tenemos que en total hay 330 muestras de cada clase si miramos los dos conjuntos de datos de forma conjunta. Por
+tanto, podemos afirmar que cada clase está idénticamente representada en los datos de los que disponemos, y que no existe una clase
+que esté representada en mayor o menor medida que el resto de ellas. 
+
+Con todo esto dicho, vamos a proceder a analizar cada una de las 19 características mencionadas anteriormente, para ver que representa
+cada una de ellas:
 
 \begin{enumerate}
-	\item Region-centroid-col: la columna del píxel central de la región.
-	\item Region-centroid-row: la fila del píxel central de la región. 
-	\item Region-pixel-count: el número de píxeles en una región = 9. 
-	\item Short-line-density-5: los resultados de un algoritmo de extracto de línea que cuenta cuántas líneas de longitud 5 (cualquier orientación) con bajo contraste , menor o igual a 5, recorre la región. 
-	\item Short-line-density-2: igual que densidad de línea corta-5 pero cuenta con líneas de alto contraste, mayor que 5. 
-	\item Vegde-mean: mide el contraste de píxeles horizontales adyacentes en la región. Hay 6, se dan la media y la desviación estándar. Este atributo se utiliza como un detector de borde vertical. 
-	\item Vegde-sd: (ver 6) 
-	\item Hedge-mean: mide el contraste de los píxeles adyacentes verticalmente. Utilizado para la detección de líneas horizontales. 
-	\item Hedge-sd: (ver 8). 
-	\item Intensity-mean: el promedio sobre la región de (R + G + B) / 3 
-	\item Rawred-mean: el promedio sobre la región del valor R. 
-	\item Rawblue-mean: el promedio sobre la región del valor B. 
-	\item Rawgreen-mean: el promedio sobre la región del valor G. 
-	\item Exred-mean: mida el exceso de rojo: (2R - (G + B)) 
-	\item Exblue-mean: mida el exceso de azul: (2B - (G + R)) 
-	\item Exgreen-mean: mida la verde en exceso : (2G - (R + B)) 
-	\item Value-mean: transformación 3D no lineal de RGB. (El algoritmo se puede encontrar en Foley y VanDam, Fundamentals of Interactive Computer Graphics) 
-	\item Saturatoin-mean: (ver 17)
-	\item Hue-mean: (ver 17)
+	\item \textit{Region-centroid-col}: la columna del píxel central de la región.
+	\item \textit{Region-centroid-row}: la fila del píxel central de la región. 
+	\item \textit{Region-pixel-count}: el número de píxeles en una región. Su valor siempre es 9. 
+	\item \textit{Short-line-density-5}: resultados de un algoritmo de extracción de rectas que cuenta cuántas líneas de longitud 5
+	(con cualquier orientación) con bajo contraste, menor o igual a 5, cruzan la región. 
+	\item \textit{Short-line-density-2}: igual que \textit{Short-line-density-5} pero cuenta con líneas de alto contraste,
+	mayor que 5. 
+	\item \label{it:vegde} \textit{Vegde-mean}: mide el contraste de píxeles horizontalmente adyacentes en la región. Hay 6 valores,
+	pero se da dan la media y la desviación típica. Este atributo se utiliza como un detector de borde vertical. 
+	\item \textit{Vegde-sd:} Desviación típica del contraste de píxeles horizontalmente adyacentes en la región (ver \ref{it:vegde}).
+	\item \label{it:hedge} \textit{Hedge-mean}: mide el contraste de los píxeles verticalmente adyacentes.
+	Utilizado para la detección de líneas horizontales. Este atributo es el valor medio.
+	\item \textit{Hedge-sd}: Desviación típica del contraste de los píxeles verticalmente adyacentes (ver \ref{it:hedge}). 
+	\item \textit{Intensity-mean}: el promedio sobre la región de (R + G + B) / 3.
+	\item \textit{Rawred-mean}: Promedio sobre la región del valor R. 
+	\item \textit{Rawblue-mean}: Promedio sobre la región del valor B. 
+	\item \textit{Rawgreen-mean}: Promedio sobre la región del valor G. 
+	\item \textit{Exred-mean}: Mide el exceso de rojo: (2R - (G + B)).
+	\item \textit{Exblue-mean}: Mide el exceso de azul: (2B - (G + R)).
+	\item \textit{Exgreen-mean}: Mide el exceso de verde: (2G - (R + B)).
+	\item \label{it:value} \textit{Value-mean}: Transformación 3D no lineal de RGB.
+	\item \textit{Saturatoin-mean}: (ver \ref{it:value}).
+	\item \textit{Hue-mean}: (ver \ref{it:value}).
 \end{enumerate}
 
-Los datos de salida son etiquetas que hacen referencia a cada uno de los tipos de imágenes que tenemos. Los 7 tipos de imágenes son: brickface, sky, foliage, cement, window, path, grass. Para trabajar más fácilmente con ellos, vamos a transformar cada una de estas etiquetas en valores enteros del 0 al 6 respectivamente en el orden dado anteriormente.
+Con esto dicho, vamos a analizar cuáles son los datos de salida. Como estamos en un problema de clasificación, cada entrada
+produce una salida que es una etiqueta. La etiqueta puede hacer referencia a una de las 7 clases que tiene el problema, las cuáles
+son: \textit{brickface}, \textit{sky}, \textit{foliage}, \textit{cement}, \textit{window}, \textit{path} y \textit{grass}.
+Para facilitar el de representación de clase, vamos a transformar posteriormente cada valor de la etiqueta a un número entero. Esto
+se verá en su correspondiente sección, cuando se realice el análisis y transformación de los datos.
 
-La distribución de clases está hecha para que haya 330 datos exactos de cada uno de los tipos de imágenes.
+Y con esto dicho, vamos a comenzar con un primer paso muy importante, el cuál es el análisis de los datos para intentar descubrir
+qué nos pueden ofrecer éstos.
 
+\newpage
+
+\section{\textsc{Análisis de los datos}}
 
 \newpage
 
 % Pagina de bibliografia
 \begin{thebibliography}{5}
 
-\bibitem{nombre-referencia}
-Texto referencia
-\\\url{https://url.referencia.com}
+\bibitem{bib:uci-repo}
+UCI. \textit{Image segmentation}
+\\\url{http://archive.ics.uci.edu/ml/datasets/image+segmentation}
 
 \end{thebibliography}
 
