@@ -29,8 +29,6 @@ from sklearn.svm import SVC
 
 np.random.seed(1)
 
-
-
 ##################################################################
 # Lectura y division de los datos
 
@@ -214,7 +212,7 @@ def evaluate_models(models, X, y, model_names, cv=10, metric='neg_mean_absolute_
         # Guardar desviaciones
         deviations.append(np.std(results))
 
-        # plot_learning_curve(model, model_names[idx], X_train, y_train, cv=cv)
+        plot_learning_curve(model, model_names[idx], X_train, y_train, cv=cv)
 
     return means, deviations
 
@@ -240,7 +238,27 @@ def prediction_evaluated_models(models, X, y, model_names, cv=10):
 
 
 ##################################################################
-# Visualizar resultados de eval. y graficas de clases
+# Visualizar resultados y graficas
+
+def plot_pearson_correlation(data, fig_size):
+    """
+    Funcion para dibujar un grafico con la matriz con lo coeficientes de
+    correlacion de Pearson
+    
+    :param data: Conjunto de datos de los que obtener la matriz de coeficientes
+    :param fig_size: Escala de la figura a dibujar
+    """
+    
+    # Obtener matriz de correlacion con 3 decimales
+    corr = data.corr().round(3)
+
+    # Establecer escala de figura y pintar
+    plt.figure(figsize=fig_size)
+    plt.title('Pearson Correlation Indexes Matrix')
+    sns.heatmap(corr, vmin=-1, cmap='Spectral', annot=True, xticklabels=True, yticklabels=True)
+    
+    plt.show()
+
 
 def print_evaluation_results(models, means, deviations, metric):
     """
@@ -297,12 +315,13 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 #########################################################
 # Lectura de los datos
+    
 df1 = read_data_values('datos/segmentation.data')
 df2 = read_data_values('datos/segmentation.test')
 df = pd.concat([df1,df2])
 
 #########################################################
-# Creamos mapa para cambiar los valores de las etiquetas
+# Crear mapa para cambiar los valores de las etiquetas
 
 labels_to_values = { 'BRICKFACE' : 0, 'SKY' : 1, 'FOLIAGE' : 2, 'CEMENT' : 3,
                      'WINDOW' : 4, 'PATH' : 5, 'GRASS' : 6 }
@@ -317,23 +336,42 @@ df[0] = df[0].map(labels_to_values)
 # Obtener valores X, Y
 X, y = divide_data_labels(df)
 
-# Dividir los datos en training y test conservando proporcionalidad
+# Dividir los datos en training y test
+# Conservar proporcionalidad de clase
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
                                                     random_state=1,
                                                     shuffle=True,
                                                     stratify=y)                # Estratificar 
 
+# Crear lista con titulos de columnas (nombres de atributos y clase)
+labels = ['RCL', 'RCR', 'RPC', 'SLD5', 'SLD2', 'VMean', 'VStd',
+             'HMean', 'HStd', 'IntM', 'RRM', 'RBM', 'RGM', 'ERM',
+             'EBM', 'EGM', 'ValM', 'SatM', 'HueM', 'Class']
+
 # Crear DataFrame con los datos de training
-train_df = pd.DataFrame(data=np.c_[X_train, y_train])
+train_df = pd.DataFrame(data=np.c_[X_train, y_train], columns=labels)
 
 # Crear DataFrame con los datos de test
-test_df = pd.DataFrame(data=np.c_[X_test, y_test])
+test_df = pd.DataFrame(data=np.c_[X_test, y_test], columns=labels)
 
 
 #########################################################
 # Obtener matriz de correlacion de Pearson
-corr = train_df.corr()
-print(corr)
+
+
+plot_pearson_correlation(train_df, (15, 15))
+
+input('---Press any key to continue---\n\n')
+
+#########################################################
+# Eliminar variables con alta correlacion
+
+# Crear lista de variables a eliminar
+rm_list = [2, 10, 11, 12, 16]
+
+X_train = np.delete(X_train, rm_list, axis=1)
+X_test = np.delete(X_test, rm_list, axis=1)
+
 
 input('---Press any key to continue---\n\n')
 
@@ -346,7 +384,7 @@ input('---Press any key to continue---\n\n')
 c_list = [0.1, 1.0, 5.0]
 n_estimators_list = [10, 25, 50, 100]
 hidden_layer_sizes_list = [10, 38, 100]
-hidden_layer_sizes_list2 = [(10,2), (38,2), (100,2)]
+hidden_layer_sizes_list2 = [(10,10), (38,38), (100,100)]
 
 
 
