@@ -73,9 +73,45 @@
 \tableofcontents
 \thispagestyle{empty}				% No usar estilo en la pagina de indice
 
+
 \newpage
 
 \setlength{\parskip}{1em}
+
+\section{\textsc{Descripción del problema}}
+
+El conjunto de datos con el que vamos a trabajar es el \textit{Image Segmentation Data Set}, creado por Vision Group de la Univesidad de Massachusetts, y contiene una serie de características de casos extraídos al azar de una base de datos con 7 tipos de imágenes al aire libre. Éstas imágenes fueron segmentadas manualmente para crear una clasificación para cada pixel. Cada instancia es una región de 3x3.
+
+Originalmente, nuestro conjunto de datos estaba ya dividido en training y test, sin embargo, disponemos de 210 datos de entrenamiento por 2100 para test. Como está muy descompensado, vamos a juntar los dos en un dólo conjunto de datos y posteriormente realizaremos la división. Por tanto, podemos decir que nuestro conjunto de datos estará compuesto por 2310 datos y 19 atributos, los valores de los cuáles son todos números reales. Los datos de la primera columna se corresponden con la información de salida, mientras que las 19  columnas restantes pertenecen a los datos de entrada.
+
+Veamos ahora a qué pertenece cada una de las 19 características mencionadas anteriormente, ordenadas por su número de columna:
+
+\begin{enumerate}
+	\item Region-centroid-col: la columna del píxel central de la región.
+	\item Region-centroid-row: la fila del píxel central de la región. 
+	\item Region-pixel-count: el número de píxeles en una región = 9. 
+	\item Short-line-density-5: los resultados de un algoritmo de extracto de línea que cuenta cuántas líneas de longitud 5 (cualquier orientación) con bajo contraste , menor o igual a 5, recorre la región. 
+	\item Short-line-density-2: igual que densidad de línea corta-5 pero cuenta con líneas de alto contraste, mayor que 5. 
+	\item Vegde-mean: mide el contraste de píxeles horizontales adyacentes en la región. Hay 6, se dan la media y la desviación estándar. Este atributo se utiliza como un detector de borde vertical. 
+	\item Vegde-sd: (ver 6) 
+	\item Hedge-mean: mide el contraste de los píxeles adyacentes verticalmente. Utilizado para la detección de líneas horizontales. 
+	\item Hedge-sd: (ver 8). 
+	\item Intensity-mean: el promedio sobre la región de (R + G + B) / 3 
+	\item Rawred-mean: el promedio sobre la región del valor R. 
+	\item Rawblue-mean: el promedio sobre la región del valor B. 
+	\item Rawgreen-mean: el promedio sobre la región del valor G. 
+	\item Exred-mean: mida el exceso de rojo: (2R - (G + B)) 
+	\item Exblue-mean: mida el exceso de azul: (2B - (G + R)) 
+	\item Exgreen-mean: mida la verde en exceso : (2G - (R + B)) 
+	\item Value-mean: transformación 3D no lineal de RGB. (El algoritmo se puede encontrar en Foley y VanDam, Fundamentals of Interactive Computer Graphics) 
+	\item Saturatoin-mean: (ver 17)
+	\item Hue-mean: (ver 17)
+\end{enumerate}
+
+Los datos de salida son etiquetas que hacen referencia a cada uno de los tipos de imágenes que tenemos. Los 7 tipos de imágenes son: brickface, sky, foliage, cement, window, path, grass. Para trabajar más fácilmente con ellos, vamos a transformar cada una de estas etiquetas en valores enteros del 0 al 6 respectivamente en el orden dado anteriormente.
+
+La distribución de clases está hecha para que haya 330 datos exactos de cada uno de los tipos de imágenes.
+
 
 \newpage
 

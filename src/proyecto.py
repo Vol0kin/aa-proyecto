@@ -346,6 +346,7 @@ input('---Press any key to continue---\n\n')
 c_list = [0.1, 1.0, 5.0]
 n_estimators_list = [10, 25, 50, 100]
 hidden_layer_sizes_list = [10, 38, 100]
+hidden_layer_sizes_list2 = [(10,2), (38,2), (100,2)]
 
 
 
@@ -364,7 +365,7 @@ lr_pipe = create_lr_pipeline(c_list)
 svmc_pipe = create_svmc_pipeline(c_list)
 rf_pipe = create_rf_pipeline(n_estimators_list)
 nn_pipe = create_nn_pipeline(hidden_layer_sizes_list)
-nn_pipe_es = create_nn_pipeline(hidden_layer_sizes_list, early_stopping=True)
+nn_pipe_es = create_nn_pipeline(hidden_layer_sizes_list2)
 
 models = lr_pipe + svmc_pipe + rf_pipe + nn_pipe + nn_pipe_es
 
