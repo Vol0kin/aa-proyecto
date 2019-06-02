@@ -95,7 +95,7 @@ def create_lr_pipeline(c_list):
     for c in c_list:
         pipelines.append(
             make_pipeline(StandardScaler(), PCA(n_components=0.95),
-                          LogisticRegression(C=c, random_state=1)))
+                          LogisticRegression(C=c, multi_class='multinomial', solver='newton-cg', random_state=1)))
 
     return pipelines
 
@@ -124,7 +124,7 @@ def create_svmc_pipeline(c_list):
     return pipelines
 
 
-def create_rf_pipeline(n_estimators_list):
+def create_rf_pipeline(n_estimators_list, max_depth=None):
     """
     Funcion para crear una lista de pipelines con el modelo
     de Random Forest dados unos valores que determinan el numero de arboles,
@@ -143,7 +143,7 @@ def create_rf_pipeline(n_estimators_list):
     for n_estimators in n_estimators_list:
         pipelines.append(
             make_pipeline(StandardScaler(), PCA(n_components=0.95),
-                          RandomForestClassifier(n_estimators=n_estimators, random_state=1)))
+                          RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=1)))
 
     return pipelines
 
@@ -212,12 +212,13 @@ def evaluate_models(models, X, y, model_names, cv=10, metric='neg_mean_absolute_
         # Guardar desviaciones
         deviations.append(np.std(results))
 
+        # Imprime la curva de aprendizaje del modelo
         plot_learning_curve(model, model_names[idx], X_train, y_train, cv=cv)
 
     return means, deviations
 
 
-def prediction_evaluated_models(models, X_train, y_train, X_test, y_test, model_names, cv=10):
+def prediction_evaluated_models(models, X_train, y_train, X_test, y_test, model_names):
     for idx, model in enumerate(models):
         # Entrenamos nuestro clasificador con los datos de entrenamiento
         model.fit(X_train, y_train)
@@ -286,41 +287,60 @@ def print_evaluation_results(models, means, deviations, metric):
     print(out_df)
 
 
-def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
-                        n_jobs=None, train_sizes=np.linspace(.1, 1.0, 10)):
+def plot_learning_curve(model, title, X, y, cv=None, train_sizes=np.linspace(.1, 1.0, 10)):
+    """
+    Funcion para mostrar una gráfica con la curva de aprendizaje
+
+    :param model: Modelo que se quiere evaluar
+    :param X: Conjunto de datos con los que evaluar
+    :param y: Conjunto de etiquetas
+    :param cv: Numero de k-folds que realizar (por defecto 10)
+    :param train_sizes: Número de evaluaciones o puntos que tendrá
+                        la curva de validación
+    """
+
+    # Establecer escala de figura y títulos
     plt.figure()
     plt.title(title)
-    if ylim is not None:
-        plt.ylim(*ylim)
     plt.xlabel("Training examples")
     plt.ylabel("Score")
+
+    # Calcula la curva de aprendizaje
     train_sizes, train_scores, test_scores = learning_curve(
-        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
+        model, X, y, cv=cv, n_jobs=4, train_sizes=train_sizes)
+
+    # Calcula la media de aciertos y desviación típica
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
     test_scores_std = np.std(test_scores, axis=1)
-    plt.grid()
 
+    # Genera las áreas de influencia de las dos rectas
     plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
                      train_scores_mean + train_scores_std, alpha=0.1,
                      color="r")
     plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
                      test_scores_mean + test_scores_std, alpha=0.1, color="g")
+
+    # Genera las rectas de para el training y el test
     plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
              label="Training score")
     plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
              label="Cross-validation score")
 
+    # Imprime la curva
     plt.legend(loc="best")
+    plt.grid()
     plt.show()
+
 
 
 
 
 #########################################################
 # Lectura de los datos
-    
+
+print('IMAGE SEGMENTATION DATA SET\n')
 df1 = read_data_values('datos/segmentation.data')
 df2 = read_data_values('datos/segmentation.test')
 df = pd.concat([df1,df2])
@@ -350,8 +370,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
 
 # Crear lista con titulos de columnas (nombres de atributos y clase)
 labels = ['RCL', 'RCR', 'RPC', 'SLD5', 'SLD2', 'VMean', 'VStd',
-             'HMean', 'HStd', 'IntM', 'RRM', 'RBM', 'RGM', 'ERM',
-             'EBM', 'EGM', 'ValM', 'SatM', 'HueM', 'Class']
+          'HMean', 'HStd', 'IntM', 'RRM', 'RBM', 'RGM', 'ERM',
+          'EBM', 'EGM', 'ValM', 'SatM', 'HueM', 'Class']
 
 # Crear DataFrame con los datos de training
 train_df = pd.DataFrame(data=np.c_[X_train, y_train], columns=labels)
@@ -360,13 +380,21 @@ train_df = pd.DataFrame(data=np.c_[X_train, y_train], columns=labels)
 test_df = pd.DataFrame(data=np.c_[X_test, y_test], columns=labels)
 
 
+# Imprimimos un ejemplo del dataset
+print('Muestra del conjunto de datos:')
+print(train_df.head())
+
+# Determinar numero de muestras por conjunto
+print('Número de datos de entrenamiento: ', train_df.shape[0])
+print('Número de datos de test: ', test_df.shape[0])
+
+input('\n---Press any key to continue---\n\n')
+
 #########################################################
 # Obtener matriz de correlacion de Pearson
-
-
 plot_pearson_correlation(train_df, (15, 15))
 
-input('---Press any key to continue---\n\n')
+print('Variables con alta correlación: 2, 10, 11, 12, 16')
 
 #########################################################
 # Eliminar variables con alta correlacion
@@ -377,8 +405,7 @@ rm_list = [2, 10, 11, 12, 16]
 X_train = np.delete(X_train, rm_list, axis=1)
 X_test = np.delete(X_test, rm_list, axis=1)
 
-
-input('---Press any key to continue---\n\n')
+input('\n---Press any key to continue---\n\n')
 
 
 
@@ -388,17 +415,16 @@ input('---Press any key to continue---\n\n')
 # Creamos las listas de valores para los determinados modelos
 c_list = [0.1, 1.0, 5.0]
 n_estimators_list = [10, 25, 50, 100]
-hidden_layer_sizes_list = [10, 38, 100]
-hidden_layer_sizes_list2 = [(10,10), (38,38), (100,100)]
-
-
+hidden_layer_sizes_list = [10, 38, 100, (10,10), (38,38), (100,100), (10,10,10), (38,38,38), (100,100,100)]
 
 # Asignamos nombres a los modelos
 model_names = ['LR c = 0.1', 'LR c = 1.0', 'LR c = 5.0',
                'SVMC c = 0.1', 'SVMC c = 1.0', 'SVMC c = 5.0',
                'RF n_estimators = 10', 'RF n_estimators = 25', 'RF n_estimators = 50', 'RF n_estimators = 100',
+               'RF n_estimators = 10, max_depth = 9', 'RF n_estimators = 25, max_depth = 9', 'RF n_estimators = 50, max_depth = 9', 'RF n_estimators = 100, max_depth = 9',
                'NN hidden_layer_sizes = 10', 'NN hidden_layer_sizes = 38', 'NN hidden_layer_sizes = 100',
-               'NN hidden_layer_sizes = 10-10', 'NN hidden_layer_sizes = 38-38', 'NN hidden_layer_sizes = 100-100']
+               'NN hidden_layer_sizes = 10-10', 'NN hidden_layer_sizes = 38-38', 'NN hidden_layer_sizes = 100-100',
+               'NN hidden_layer_sizes = 10-10-10', 'NN hidden_layer_sizes = 38-38-38', 'NN hidden_layer_sizes = 100-100-100']
 
 # Crear 10-fold que conserva la proporcion
 cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
@@ -407,10 +433,10 @@ cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
 lr_pipe = create_lr_pipeline(c_list)
 svmc_pipe = create_svmc_pipeline(c_list)
 rf_pipe = create_rf_pipeline(n_estimators_list)
+rf_pipe_depth = create_rf_pipeline(n_estimators_list, 9)
 nn_pipe = create_nn_pipeline(hidden_layer_sizes_list)
-nn_pipe2 = create_nn_pipeline(hidden_layer_sizes_list2)
 
-models = lr_pipe + svmc_pipe + rf_pipe + nn_pipe + nn_pipe2
+models = lr_pipe + svmc_pipe + rf_pipe + rf_pipe_depth + nn_pipe
 
 # Obtener valores medios, desviaciones y curvas de aprendizaje de los modelos
 print('Evaluating models...')
@@ -421,12 +447,31 @@ means, deviations = evaluate_models(models, X_train, y_train,
 # Mostrar valores por pantalla
 print_evaluation_results(model_names, means, deviations, 'Mean Accuracy')
 
-
-predicted_models_names = ['NN hidden_layer_sizes = 10', 'NN hidden_layer_sizes = 38',
-                          'NN hidden_layer_sizes = 100']
-predicted_models = nn_pipe
-prediction_evaluated_models(predicted_models, X_train, y_train, X_test, y_test, predicted_models_names, cv)
+input('\n---Press any key to continue---\n\n')
 
 
-input('---Press any key to continue---\n\n')
+
+#########################################################
+# Evaluación de los mejores modelos con el test
+
+# Asignamos nombres a los modelos
+predicted_models_names = ['LR c = 5.0', 'SVMC c = 5.0', 'RF n_estimators = 100', 'NN hidden_layer_sizes = 38-38',
+                          'NN hidden_layer_sizes = 100-100', 'NN hidden_layer_sizes = 38-38-38',
+                          'NN hidden_layer_sizes = 100-100-100']
+
+# Crear pipelines para cada modelo
+predicted_lr_pipe = create_lr_pipeline([5.0])
+predicted_svmc_pipe = create_svmc_pipeline([5.0])
+predicted_rf_pipe = create_rf_pipeline([100])
+predicted_nn_pipe = create_nn_pipeline([(38,38),(100,100),(38,38,38),(100,100,100)])
+
+predicted_models = predicted_lr_pipe + predicted_svmc_pipe + predicted_rf_pipe + predicted_nn_pipe
+
+
+# Mostrar valores por pantalla
+print('\nEvaluando los mejores modelos en el test...\n')
+prediction_evaluated_models(predicted_models, X_train, y_train, X_test, y_test, predicted_models_names)
+
+
+input('\n---Press any key to continue---\n\n')
 
