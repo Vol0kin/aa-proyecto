@@ -88,7 +88,6 @@ def divide_data_labels(input_data):
     return X, y
 
 
-
 ##################################################################
 # Funciones para crear los pipelines de cada uno de los modelos
 
@@ -187,7 +186,6 @@ def create_nn_pipeline(hidden_layer_sizes_list, early_stopping=False):
                                         early_stopping=early_stopping, random_state=1)))
 
     return pipelines
-
 
 
 ##################################################################
@@ -348,7 +346,7 @@ input('\n---Press any key to continue---\n\n')
 # Crear mapa para cambiar los valores de las etiquetas
 
 print('Converting class labels to numeric values...')
-classes = ['BRICKFACE', 'SKY', 'FOLIAGE', 'CEMENT', 'WINDOW', 'PATH', 'GRASS']
+labels = ['BRICKFACE', 'SKY', 'FOLIAGE', 'CEMENT', 'WINDOW', 'PATH', 'GRASS']
 labels_to_values = { 'BRICKFACE' : 0, 'SKY' : 1, 'FOLIAGE' : 2, 'CEMENT' : 3,
                      'WINDOW' : 4, 'PATH' : 5, 'GRASS' : 6 }
 
@@ -375,15 +373,15 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
                                                     stratify=y)
 
 # Crear lista con titulos de columnas (nombres de atributos y clase)
-labels = ['RCL', 'RCR', 'RPC', 'SLD5', 'SLD2', 'VMean', 'VStd',
-          'HMean', 'HStd', 'IntM', 'RRM', 'RBM', 'RGM', 'ERM',
-          'EBM', 'EGM', 'ValM', 'SatM', 'HueM', 'Class']
+attributes = ['RCL', 'RCR', 'RPC', 'SLD5', 'SLD2', 'VMean', 'VStd',
+              'HMean', 'HStd', 'IntM', 'RRM', 'RBM', 'RGM', 'ERM',
+              'EBM', 'EGM', 'ValM', 'SatM', 'HueM', 'Class']
 
 # Crear DataFrame con los datos de training
-train_df = pd.DataFrame(data=np.c_[X_train, y_train], columns=labels)
+train_df = pd.DataFrame(data=np.c_[X_train, y_train], columns=attributes)
 
 # Crear DataFrame con los datos de test
-test_df = pd.DataFrame(data=np.c_[X_test, y_test], columns=labels)
+test_df = pd.DataFrame(data=np.c_[X_test, y_test], columns=attributes)
 
 
 # Imprimimos un ejemplo del dataset
@@ -589,7 +587,7 @@ input('\n---Press any key to continue---\n\n')
 matrix = confusion_matrix(y_test, y_predicted_rf)
 
 # Crear DataFrame que pintar
-confusion_mat = pd.DataFrame(data=matrix, index=classes, columns=classes)
+confusion_mat = pd.DataFrame(data=matrix, index=labels, columns=labels)
 
 plt.title('Confusion Matrix for Random Forest model')
 plt.xlabel('Predicted labels')
@@ -601,7 +599,7 @@ input('\n---Press any key to continue---\n\n')
 
 # Curvas de aprendizaje de Random Forest
 plot_learning_curve(RandomForestClassifier(n_estimators=150, max_depth=13, random_state=1),
-                    title='Random Forest n_estiamtors = 100 Depth = 13 levels',
+                    title='Random Forest n_estiamtors = 150 Depth = 13 levels',
                     X=X_train, y=y_train, cv=cv)
 
 input('\n---Press any key to continue---\n\n')
