@@ -256,7 +256,7 @@ algunos de los atributos. Esto se puede ver a continuación:
     \centering
     \includegraphics[scale=0.4]{img/train_df_head.png}
     \caption{Ejemplo del conjunto de datos de entrenamiento.}
-    \label{fig:train_df}
+    \label{fig:train-df}
 \end{figure}
 
 Una vez hecho esto, vamos a comprobar, para asegurarnos, cuáles son los tamaños de los conjuntos de entrenamiento y de test, y ver
@@ -273,25 +273,85 @@ print('Missing values in train? ', train_df.isnull().values.any())
 print('Missing values in test? ', test_df.isnull().values.any())
 \end{lstlisting}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{img/df_info.png}
+    \caption{Información sobre los tamaños de los conjuntos y la cantidad de valores que faltan.}
+    \label{fig:train-test-stat}
+\end{figure}
+
+Podemos ver que el conjunto de entrenamiento tiene ahora 1848 muestras, mientras que el de test tiene 462. Estos nuevos tamaños son
+resultado de la partición que hemos hecho anteriormente, y podemos ver claramente que el 20\% de los datos totales están en el
+conjunto de test, tal y como habíamos especificado. Estos tamaños son más adecuados para entrenar los modelos, ya que al tener más
+datos de entrenamiento, y si esta cantidad es lo suficientemente grande, los modelos podrán ser capaces de generalizar mejor. Como
+al principio solo teníamos 200 datos de entrenamiento, la capacidad de generalizar de los modelos estaba más limitada. Aparte, tenemos
+una cantidad de datos suficiente para poder probar luego nuestro modelo, para ver como se comporta con nuevos datos.
+
+Pasemos ahora a estudiar un aspecto bastante importante de los datos que es la correlación de éstos. Nos interesa ver si existe
+correlación lineal entre los datos de entrada y los de salida, para ver si sería necesario eliminar algún atributo. Además, también es
+interesante ver si existe alguna correlación entre los atributos que tenemos como entrada. A continuación, se muestra la matriz de
+correlación de los datos de entrenamiento, y sobre ella vamos a ir comentando los resultados:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{img/correlation.png}
+    \caption{Matriz con los coeficientes de correlación de Pearson.}
+    \label{fig:pearson}
+\end{figure}
+
+De la figura anterior, podemos sacar algunas conclusiones:
+
+\begin{itemize}[label=\textbullet]
+    \item Tal y como nos indicaba la información del repositorio, existe un atributo que es constante, y que por tanto, no aporta
+    ninguna información. Este atributo es el \textit{Region-pixel-count}, y se puede ver que en la figura no aparece ninguna
+    información sobre éste. Por tanto, al ser un atributo ``inútil'', \textbf{va a ser eliminado}.
+    \item Existen algunas variables que están más correlacionadas que 
+    
+\end{itemize}
+
 \newpage
 
 \section{\textsc{Elección de la mejor técnica}}
 
-Una vez analizados todos los modelos, utilizando \textbf{cross-validation} y diversos hiperparámetros para cada uno de ellos, vamos a comentar cuáles han sido los que han obtenido los mejores resultados y porqué. Para ello nos vamos a ayudar de las métricas obtenidas anteriormente, es decir, utilizaremos tanto la tabla que nos muestra la \textbf{media de aciertos} y \textbf{desviaciones típicas}, como las \textbf{curvas de aprendizaje} de cada uno de los modelos (poner referencia a las tablas y gráficas).
+Una vez analizados todos los modelos, utilizando \textbf{cross-validation} y diversos hiperparámetros para cada uno de ellos, vamos a
+comentar cuáles han sido los que han obtenido los mejores resultados y porqué. Para ello nos vamos a ayudar de las métricas obtenidas
+anteriormente, es decir, utilizaremos tanto la tabla que nos muestra la \textbf{media de aciertos} y \textbf{desviaciones típicas}, como
+las \textbf{curvas de aprendizaje} de cada uno de los modelos (poner referencia a las tablas y gráficas).
 
-Observando los resultados obtenidos, tenemos que el Random Forest con un $n\_estimators = 50$ es el que mayor porcentaje de acierto ha tenido, con un 97.8470\%; mientras que el que menor desviación típica ha conseguido es el MLPClassifier con un $hidden\_layer\_sizes = (100-100)$, con un valor de 0.005839. No obstante, podemos ver que el porcentaje de acierto de la mayoría de clasificadores es muy alto, entre el 96\% y el 97\%, y los valores de las desviaciones típicas también son bastante bastante bajos, entre el 0.005 y el 0.02; así que tendremos que tener en cuenta más cosas a parte de estas.
+Observando los resultados obtenidos, tenemos que el Random Forest con un $n\_estimators = 50$ es el que mayor porcentaje de acierto ha
+tenido, con un 97.8470\%; mientras que el que menor desviación típica ha conseguido es el MLPClassifier con un $hidden\_layer\_sizes =
+(100-100)$, con un valor de 0.005839. No obstante, podemos ver que el porcentaje de acierto de la mayoría de clasificadores es muy alto,
+entre el 96\% y el 97\%, y los valores de las desviaciones típicas también son bastante bastante bajos, entre el 0.005 y el 0.02; así que
+tendremos que tener en cuenta más cosas a parte de estas.
 
-Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algunos detalles más significativos en ellas. Si empezamos por las de Regresión Logística, vemos que las curvas son bastante suaves (sobretodo para los parámetros de $C = 1.0$ y $C = 5.0$) y a medida que aumenta el número de evaluaciones, la clasificación va mejorando y el sobreajuste se reduce. En cuanto al SVM, podemos ver que las gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero tampoco son las mejores. En el Random Forest podemos ver que las curvas van aumentando suavemente a medida que el número de evaluaciones es más grande, no obstante, (¿¿¿¿¿¿el valor del \textbf{Training score} ronda siempre el 1, lo que puede causar sobreajuste. Aún así, no podemos decir que sean malas?????). Finalmente, para las gráficas del MLPClassifier .....
+Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algunos detalles más significativos en ellas. Si empezamos por
+las de Regresión Logística, vemos que las curvas son bastante suaves (sobretodo para los parámetros de $C = 1.0$ y $C = 5.0$) y a medida
+que aumenta el número de evaluaciones, la clasificación va mejorando y el sobreajuste se reduce. En cuanto al SVM, podemos ver que las
+gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero tampoco son las mejores. En el Random Forest podemos
+ver que las curvas van aumentando suavemente a medida que el número de evaluaciones es más grande, no obstante, (¿¿¿¿¿¿el valor del
+\textbf{Training score} ronda siempre el 1, lo que puede causar sobreajuste. Aún así, no podemos decir que sean malas?????). Finalmente,
+para las gráficas del MLPClassifier .....
 
-Gracias a este análisis, podemos decir que el SVM no va a ser uno de nuestros mejores modelos, porque nos ha ofrecido los resultados más pobres en cuanto a la precisión y la desviación típica, y sus gráficas tampoco eran las mejores. Aun así, este no es un mal clasificador (hemos podido comprobar que su porcentaje de acierto suele ser mayor de 90), pero lo tenemos que descartar porque tenemos al resto que están un paso por delante.
+Gracias a este análisis, podemos decir que el SVM no va a ser uno de nuestros mejores modelos, porque nos ha ofrecido los resultados más
+pobres en cuanto a la precisión y la desviación típica, y sus gráficas tampoco eran las mejores. Aun así, este no es un mal clasificador
+(hemos podido comprobar que su porcentaje de acierto suele ser mayor de 90), pero lo tenemos que descartar porque tenemos al resto que
+están un paso por delante.
 
-Entre los tres modelos restantes nos vamos a quedar con la \textbf{Regresión Logística} y con el \textbf{Random Forest} por lo siguiente. Los tres modelos han obtenido unos resultados muy buenos, incluso me atrevería a decir que el MLPClassifier tiene las mejores curvas de aprendizaje y sólo superado en porcentaje de aciertos por algunos Random Forest, sin embargo, hemos descartado este clasificador porque es mucho más complejo que los otros dos. Viendo los resultados, no hay una diferencia que sea lo suficientemente relevante como para elegir este modelo, que es mucho más difícil y costoso en cuanto a tiempo de cómputo; frente a la rapidez y simplicidad de la Regresión Logística, o frente al Random Forest que obtuvo los mejores resultados y que también es bastante más rápido.
+Entre los tres modelos restantes nos vamos a quedar con la \textbf{Regresión Logística} y con el \textbf{Random Forest} por lo siguiente.
+Los tres modelos han obtenido unos resultados muy buenos, incluso me atrevería a decir que el MLPClassifier tiene las mejores curvas de
+aprendizaje y sólo superado en porcentaje de aciertos por algunos Random Forest, sin embargo, hemos descartado este clasificador porque es
+mucho más complejo que los otros dos. Viendo los resultados, no hay una diferencia que sea lo suficientemente relevante como para elegir
+este modelo, que es mucho más difícil y costoso en cuanto a tiempo de cómputo; frente a la rapidez y simplicidad de la Regresión Logística,
+o frente al Random Forest que obtuvo los mejores resultados y que también es bastante más rápido.
 
 \section{\textsc{Ajuste de las técnicas seleccionadas}}
 
 \subsection{Regresión Logística}
 
-Este modelo hemos visto que no ofrecía las mejores soluciones (aunque no se quedaba lejos de ellas), pero como es significativamente más rápido que las redes neuronales, vamos a intentar ajustas sus hiperparámetros al máximo para conseguir mejorar sus resultados. Esto lo haremos creando un grid con los distintos valores que le podremos asignar a nuestro algoritmo, y posteriormente ejecutándolo para cada uno de ellos. Este es código que crea el grid y el modelo de Regresión Logística:
+Este modelo hemos visto que no ofrecía las mejores soluciones (aunque no se quedaba lejos de ellas), pero como es significativamente más
+rápido que las redes neuronales, vamos a intentar ajustas sus hiperparámetros al máximo para conseguir mejorar sus resultados. Esto lo
+haremos creando un grid con los distintos valores que le podremos asignar a nuestro algoritmo, y posteriormente ejecutándolo para cada uno
+de ellos. Este es código que crea el grid y el modelo de Regresión Logística:
 
 \begin{lstlisting}
 # Crear grid de hiperparametros que se van a probar
@@ -304,9 +364,16 @@ param_grid_lr = [{'C': np.linspace(0.1, 1.0, 10),
 mlr = LogisticRegression()
 \end{lstlisting}
 
-Para el parámetro $C$ generamos una muestra de tamaño 10 con valores que van del 0.1 hasta el 1.0. Éste será el único hiperparámetro que cambie, ya que $multi\_class$ sólo podrá adoptar el valor $'multinomial'$ y $solver$ sólo tendrán el valor $`newton-cg'$. El primero de ellos es porque estamos en un problema multiclase, y el segundo de ellos porque ofrece una mejor minimización de la función cuadrática. El último hiperparámetro $random\_state$ es la semilla para los aleatorios, así que no es muy importante.
+Para el parámetro $C$ generamos una muestra de tamaño 10 con valores que van del 0.1 hasta el 1.0. Éste será el único hiperparámetro que
+cambie, ya que $multi\_class$ sólo podrá adoptar el valor $'multinomial'$ y $solver$ sólo tendrán el valor $`newton-cg'$. El primero de
+ellos es porque estamos en un problema multiclase, y el segundo de ellos porque ofrece una mejor minimización de la función cuadrática. El
+último hiperparámetro $random\_state$ es la semilla para los aleatorios, así que no es muy importante.
 
-A continuación, utilizaremos el método \textbf{\textit{GridSearchCV}}\cite{GridSearchCV} para realizar una búsqueda exhaustiva entre todos los valores de los parámetros especificados y quedarnos con el mejor. Este método implementa funciones como $fit$ o $score$ que nos ayudarán a evaluarlo, y parámetros como $best\_estimator\_$ que nos dirá cuál ha sido el mejor modelo de todos. Esta evaluación, al igual que las anteriores, también se realizará mediante \textit{cross-validation} (implementada por la propia función). Veamos el código donde aplicamos \textit{GridSearchCV}:
+A continuación, utilizaremos el método \textbf{\textit{GridSearchCV}}\cite{GridSearchCV} para realizar una búsqueda exhaustiva entre todos
+los valores de los parámetros especificados y quedarnos con el mejor. Este método implementa funciones como $fit$ o $score$ que nos
+ayudarán a evaluarlo, y parámetros como $best\_estimator\_$ que nos dirá cuál ha sido el mejor modelo de todos. Esta evaluación, al igual
+que las anteriores, también se realizará mediante \textit{cross-validation} (implementada por la propia función). Veamos el código donde
+aplicamos \textit{GridSearchCV}:
 
 \begin{lstlisting}
 # Crear GridSearch con Cross Validation para determinar
@@ -331,15 +398,27 @@ El resultado de ejecutar todo esto ha sido el siguiente:
     \label{fig:gs-lr}
 \end{figure}
 
-Como podemos observar, el método ha seleccionado como valor para el hiperparámetro $C = 0.5$, el cual no habíamos prefijado en las pruebas iniciales (0.1, 1.0, 5.0). Este valor está bastante bien estimado, ya que valores más bajos, como 0.1, hacen que la regularización sea muy fuerte, mientras que con valores más altos, como 5.0, el sobreajuste aparecerá debido a que los errores tendrán una mayor penalización. Lo lógico sería elegir valores por este rango de 0.5-1.0 aproximadamente, ya que son los que evitan los problemas anteriores.
+Como podemos observar, el método ha seleccionado como valor para el hiperparámetro $C = 0.5$, el cual no habíamos prefijado en las pruebas
+iniciales (0.1, 1.0, 5.0). Este valor está bastante bien estimado, ya que valores más bajos, como 0.1, hacen que la regularización sea muy
+fuerte, mientras que con valores más altos, como 5.0, el sobreajuste aparecerá debido a que los errores tendrán una mayor penalización. Lo
+lógico sería elegir valores por este rango de 0.5-1.0 aproximadamente, ya que son los que evitan los problemas anteriores.
 
-Si nos paramos a analizar tanto la precisión como la desviación típica, los valores obtenidos con este nuevo hiperparámetro son peores, a priori. Tenemos que tener en cuenta que este valor es calculado en $cross-validation$, y los valores más malos vienen a partir del tercer decimal. Lo que nos lleva a decir que este modelo está mejor ajustado es que el valor de $C$ ha sido seleccionado de forma que se regulariza en una medida apropiada para conseguir buenos resultados.
+Si nos paramos a analizar tanto la precisión como la desviación típica, los valores obtenidos con este nuevo hiperparámetro son peores, a
+priori. Tenemos que tener en cuenta que este valor es calculado en $cross-validation$, y los valores más malos vienen a partir del tercer
+decimal. Lo que nos lleva a decir que este modelo está mejor ajustado es que el valor de $C$ ha sido seleccionado de forma que se
+regulariza en una medida apropiada para conseguir buenos resultados.
 
-Concluimos que, pese a no haber mejorado los resultados iniciales, el modelo sigue clasificando bastante bien. No obstante, no lo seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las Redes Neuronales, aunque habría que estudiarlo en términos de eficiencia y simplicidad), y aún no hemos estudiado sus hiperparámetros y si estos pueden hacer que mejore.
+Concluimos que, pese a no haber mejorado los resultados iniciales, el modelo sigue clasificando bastante bien. No obstante, no lo
+seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las
+Redes Neuronales, aunque habría que estudiarlo en términos de eficiencia y simplicidad), y aún no hemos estudiado sus hiperparámetros y si
+estos pueden hacer que mejore.
 
 \subsection{Random Forest}
 
-Es el turno de Random Forest, el modelo que mejores resultados ha obtenido en cuanto a precisión media y a varianza, que no tenía unas malas curvas de aprendizaje, y que no es tan rápido como los SVM pero tienen una complejidad y tiempo de cómputo aceptable. Para intentar mejorar, o encontrar los hiperparámetros que mejor se ajustan a este modelo vamos a utilizar la misma técnica de antes, el \textit{GridSearchCV}. En este caso, el grid y el modelo Random Forest se crea de la siguiente forma:
+Es el turno de Random Forest, el modelo que mejores resultados ha obtenido en cuanto a precisión media y a varianza, que no tenía unas
+malas curvas de aprendizaje, y que no es tan rápido como los SVM pero tienen una complejidad y tiempo de cómputo aceptable. Para intentar
+mejorar, o encontrar los hiperparámetros que mejor se ajustan a este modelo vamos a utilizar la misma técnica de antes, el
+\textit{GridSearchCV}. En este caso, el grid y el modelo Random Forest se crea de la siguiente forma:
 
 \begin{lstlisting}
 # Crear grid de hiperparametros que se van a probar
@@ -352,9 +431,13 @@ rf = RandomForestClassifier()
 
 \end{lstlisting}
 
-Para el hiperparámetro $n\_estimators$, que determina el número de árboles, generamos una muestra de tamaño 10 con valores que van desde el 50 hasta el 500; y para $max\_depth$, que determina la profundidad de los árboles, generaremos otra muestra, en este caso de tamaño 6 y con valores que van desde el 5 hasta el 15. El último hiperparámetro también será $random\_state$, que al igual que antes, es la semilla para los aleatorios.
+Para el hiperparámetro $n\_estimators$, que determina el número de árboles, generamos una muestra de tamaño 10 con valores que van desde el
+50 hasta el 500; y para $max\_depth$, que determina la profundidad de los árboles, generaremos otra muestra, en este caso de tamaño 6 y con
+valores que van desde el 5 hasta el 15. El último hiperparámetro también será $random\_state$, que al igual que antes, es la semilla para
+los aleatorios.
 
-Como la técnica para realizar la búsqueda de los mejores valores es la misma que la utilizada anteriormente en Regresión Logística, no la vamos a volver a explicar, simplemente pasemos a ver los resultados que nos ha dado:
+Como la técnica para realizar la búsqueda de los mejores valores es la misma que la utilizada anteriormente en Regresión Logística, no la
+vamos a volver a explicar, simplemente pasemos a ver los resultados que nos ha dado:
 
 \begin{figure}[H]
     \centering
@@ -363,13 +446,40 @@ Como la técnica para realizar la búsqueda de los mejores valores es la misma q
     \label{fig:gs-lr}
 \end{figure}
 
-Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el modelo inicial, lo cual nos dice que tendríamos que haber probado con un número de árboles superior a  los prefijados. Por otro lado, para $max\_depth$ el valor que ha obtenido ha sido 15, es decir, a diferencia de la ejecución inicial nos asigna un valor de profundidad límite. También hay que tener en cuenta que nosotros intentamos poner una profundidad de 9 en esas ejecuciones y los resultados no eran tan buenos como con estos hiperparámetros.
+Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el
+modelo inicial, lo cual nos dice que tendríamos que haber probado con un número de árboles superior a  los prefijados. Por otro lado, para
+$max\_depth$ el valor que ha obtenido ha sido 15, es decir, a diferencia de la ejecución inicial nos asigna un valor de profundidad límite.
+También hay que tener en cuenta que nosotros intentamos poner una profundidad de 9 en esas ejecuciones y los resultados no eran tan buenos
+como con estos hiperparámetros.
 
-En cuanto a las medias en la precisión y en la desviación típica, también son valores muy similares a los obtenidos en la ejecución inicial. Sin embargo, son valores similares a los árboles sin una profundidad determinada, es decir, que hemos conseguido un porcentaje de acierto y una desviación típica tan buena como los anteriores pero con una profundidad de árbol limitada. También hay que tener en cuenta el número de árboles utilizados, pero si se ha seleccionado este modelo como el mejor, es porque merece más la pena tener un mayor número de árboles con una profundidad limitada que tener pocos árboles con mucha profundidad. Esto se debe a que los primeros se han podado a priori y los segundos, al no haber especificado una profundidad máxima, no se han podado, con lo cuál son más sensibles al sobreajuste.
+En cuanto a las medias en la precisión y en la desviación típica, también son valores muy similares a los obtenidos en la ejecución
+inicial. Sin embargo, son valores similares a los árboles sin una profundidad determinada, es decir, que hemos conseguido un porcentaje de
+acierto y una desviación típica tan buena como los anteriores pero con una profundidad de árbol limitada. También hay que tener en cuenta
+el número de árboles utilizados, pero si se ha seleccionado este modelo como el mejor, es porque merece más la pena tener un mayor número
+de árboles con una profundidad limitada que tener pocos árboles con mucha profundidad. Esto se debe a que los primeros se han podado a
+priori y los segundos, al no haber especificado una profundidad máxima, no se han podado, con lo cuál son más sensibles al sobreajuste.
 
-Como conclusión, decir que nos vamos a quedar con este último modelo de Random Forest obtenido como el mejor clasificador para el problema. Ya vimos anteriormente que los Random Forest eran el mejor modelo (o de los mejores) en la ejecución inicial, y como acabamos de comprobar, ajustando los modelos no hay ninguno que llegue a su nivel. También añadir que 
+Como conclusión, decir que nos vamos a quedar con este último modelo de Random Forest obtenido como el mejor clasificador para el problema.
+Ya vimos anteriormente que los Random Forest eran el mejor modelo (o de los mejores) en la ejecución inicial, y como acabamos de comprobar,
+ajustando los modelos no hay ninguno que llegue a su nivel. Es más, ajustando el modelo hemos conseguido unos parámetros que mejoran los
+asignados en un principio, así que partiremos de estos para realizar la evaluación final.
 
 \section{\textsc{Evaluación del mejor modelo}}
+
+Vamos a realizar la evaluación final del modelo elegido. Para ello nos ayudaremos de un modelo de referencia llamado \textbf{\textit{DummyClassifier}}\cite{DummyClassifier}, un modelo que utiliza reglas simples y que está especialmente diseñado para ser comparado con otras técnicas reales de clasificación (no se utiliza para problemas reales). El código para generar este clasificador es el siguiente:
+
+\begin{lstlisting}
+# Creamos modelo de prueba y lo entrenamos
+dummy = DummyClassifier()
+dummy.fit(X_train, y_train)
+
+# Predecir valores con dummy
+y_predicted_dummy = dummy.predict(X_test)
+\end{lstlisting}
+
+Podemos observar que estamos utilizando el clasificador con los parámetros por defecto. Entre estos tenemos uno llamado $strategy$, que por defecto tiene el valor $'stratified'$, el cual genera predicciones aleatorias respetando la distribución de clases del conjunto. Los otros dos atributos que tenemos son el $random\_state$, que ya vimos para que sirve, y otro llamado $constant$, que sólo afectará si el parámetro $strategy$ adopta un determinado valor (y no es nuestro caso).
+
+Posteriormente, vamos a entrenar nuestro mejor modelo. Como estamos utilizando el que acabamos de ajustar y hemos clasificado como el mejor, no vamos a volver a explicar cómo se ha hecho. Simplemente, recordar que hemos utilizado un Random Forest con los hiperparámetros ajustados a 400 árboles con una profundidad máxima de 15.
 
 
 
@@ -413,6 +523,10 @@ Scikit-Learn \textit{plot\_learning\_curve}
 \bibitem{GridSearchCV}
 Scikit-Learn \textit{GridSearchCV}
 \\\url{https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html}
+
+\bibitem{DummyClassifier}
+Scikit-Learn \textit{DummyClassifier}
+\\\url{https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier.html}
 
 \end{thebibliography}
 
