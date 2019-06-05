@@ -206,9 +206,7 @@ Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algu
 
 Gracias a este análisis, podemos decir que el SVM no va a ser uno de nuestros mejores modelos, porque nos ha ofrecido los resultados más pobres en cuanto a la precisión y la desviación típica, y sus gráficas tampoco eran las mejores. Aun así, este no es un mal clasificador (hemos podido comprobar que su porcentaje de acierto suele ser mayor de 90), pero lo tenemos que descartar porque tenemos al resto que están un paso por delante.
 
-Entre los tres modelos restantes nos vamos a quedar con la \textbf{Regresión Logística} y con el \textbf{Random Forest} por lo siguiente. Los tres modelos han obtenido unos resultados muy buenos, incluso me atrevería a decir que el MLPClassifier tiene las mejores curvas de aprendizaje y sólo superado en porcentaje de aciertos por algunos Random Forest, sin embargo, hemos descartado este clasificador porque es mucho más complejo que los otros dos. Viendo los resultados, no hay una diferencia que sea lo suficientemente relevante como para elegir este modelo, que es mucho más difícil y costoso en cuanto a tiempo de cómputo, frente a la rapidez y simplicidad de la Regresión Logística o al Random Forest que obtuvo los mejores resultados y que también es bastante más rápido.
-
-\newpage
+Entre los tres modelos restantes nos vamos a quedar con la \textbf{Regresión Logística} y con el \textbf{Random Forest} por lo siguiente. Los tres modelos han obtenido unos resultados muy buenos, incluso me atrevería a decir que el MLPClassifier tiene las mejores curvas de aprendizaje y sólo superado en porcentaje de aciertos por algunos Random Forest, sin embargo, hemos descartado este clasificador porque es mucho más complejo que los otros dos. Viendo los resultados, no hay una diferencia que sea lo suficientemente relevante como para elegir este modelo, que es mucho más difícil y costoso en cuanto a tiempo de cómputo; frente a la rapidez y simplicidad de la Regresión Logística, o frente al Random Forest que obtuvo los mejores resultados y que también es bastante más rápido.
 
 \section{\textsc{Ajuste de las técnicas seleccionadas}}
 
@@ -258,9 +256,36 @@ Como podemos observar, el método ha selecciona el mismo valor para el hiperpar�
 
 Si nos paramos a analizar tanto la precisión como la desviación típica hay poco que comentar. Como los hiperparametros utilizados han sido los mismos que en las pruebas iniciales, los valores que han obtenido han sido prácticamente iguales que los anteriores, con un decimal o dos de diferencia, pero prácticamente es insignificativo.
 
-Concluimos que, pese a no haber mejorado porque ya habíamos elegido los valores más adecuados, el modelo sigue clasificando bastante bien. No obstante, no lo seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las Redes Neuronales, aunque habría que estudiarlo en términos de complejidad), y aún no hemos estudiado sus hiperparámetros y si estos pueden hacer que mejore. hgh
+Concluimos que, pese a no haber mejorado porque ya habíamos elegido los valores más adecuados, el modelo sigue clasificando bastante bien. No obstante, no lo seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las Redes Neuronales, aunque habría que estudiarlo en términos de eficiencia y simplicidad), y aún no hemos estudiado sus hiperparámetros y si estos pueden hacer que mejore.
 
 \subsection{Random Forest}
+
+Es el turno de Random Forest, el modelo que mejores resultados ha obtenido en cuanto a precisión media y a varianza, que no tenía unas malas curvas de aprendizaje, y que no es tan rápido como los SVM pero tienen una complejidad y tiempo de cómputo aceptable. Para intentar mejorar, o encontrar los hiperparámetros que mejor se ajustan a este modelo vamos a utilizar la misma técnica de antes, el \textit{GridSearchCV}. En este caso, el grid y el modelo Random Forest se crea de la siguiente forma:
+
+\begin{lstlisting}
+# Crear grid de hiperparametros que se van a probar
+param_grid_rf = [{'n_estimators': np.linspace(100,500,9,dtype=np.int),
+                  'max_depth': np.linspace(5, 15, 6, dtype=np.int),
+                  'random_state': [1]}]
+
+# Crear modelo de Random Forest
+rf = RandomForestClassifier()
+
+\end{lstlisting}
+
+Para el hiperparámetro $n\_estimators$, que determina el número de árboles, generamos una muestra de tamaño 9 con valores que van desde el 100 hasta el 500; y para $max\_depth$, que determina la profundidad de los árboles, generaremos otra muestra, en este caso de tamaño 6 y con valores que van desde el 5 hasta el 15. El último hiperparámetro también será $random\_state$, que al igual que antes, es la semilla para los aleatorios.
+
+Como la técnica para realizar la búsqueda de los mejores valores es la misma que la utilizada anteriormente en Regresión Logística, no la vamos a volver a explicar, simplemente pasemos a ver los resultados que nos ha dado:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{img/gs-rf.png}
+    \caption{Resultados de \textit{GridSearch} sobre Random Forest.}
+    \label{fig:gs-lr}
+\end{figure}
+
+Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 150, es decir, más alto......... [esperar a confirmar]; mientras que para $max\_depth$ los mejores resultados se han dado con una profundidad de 13, por lo que es mejor... [esperar a confirmar].
+
 
 \newpage
 
