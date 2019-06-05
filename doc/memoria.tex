@@ -248,8 +248,30 @@ los datos de los que disponemos.
 
 \section{\textsc{Análisis de los datos}}
 
-En esta sección vamos a realizar un estudio de los datos para ver qué información nos pueden ofrecer sobre el problema.
+En esta sección vamos a realizar un estudio de los datos para ver qué información nos pueden ofrecer sobre el problema. Lo primero que
+vamos a hacer es observar algunas muestras del conjunto de entrenamiento para hacernos una idea de cómo es y qué valores pueden tomar
+algunos de los atributos. Esto se puede ver a continuación:
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{img/train_df_head.png}
+    \caption{Ejemplo del conjunto de datos de entrenamiento.}
+    \label{fig:train_df}
+\end{figure}
+
+Una vez hecho esto, vamos a comprobar, para asegurarnos, cuáles son los tamaños de los conjuntos de entrenamiento y de test, y ver
+si falta algún valor en estos conjuntos (a pesar de que en el repositorio se indicaba que no falta ninguno, nunca viene mal asegurarse).
+Veamos a continuación qué información podemos extraer de aquí:
+
+\begin{lstlisting}
+# Determinar numero de muestras por conjunto
+print('Training data size: ', train_df.shape[0])
+print('Test data size: ', test_df.shape[0])
+
+# Determinar si faltan valores para los dos conjunts
+print('Missing values in train? ', train_df.isnull().values.any())
+print('Missing values in test? ', test_df.isnull().values.any())
+\end{lstlisting}
 
 \newpage
 
@@ -341,7 +363,11 @@ Como la técnica para realizar la búsqueda de los mejores valores es la misma q
     \label{fig:gs-lr}
 \end{figure}
 
-Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el modelo inicial, lo cual nos dice que tendríamos que haber probado con un número de árboles superior a  los prefijados. Por  para $max\_depth$ los mejores resultados se han dado con una profundidad de 13, por lo que es mejor... [esperar a confirmar].
+Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el modelo inicial, lo cual nos dice que tendríamos que haber probado con un número de árboles superior a  los prefijados. Por otro lado, para $max\_depth$ el valor que ha obtenido ha sido 15, es decir, a diferencia de la ejecución inicial nos asigna un valor de profundidad límite. También hay que tener en cuenta que nosotros intentamos poner una profundidad de 9 en esas ejecuciones y los resultados no eran tan buenos como con estos hiperparámetros.
+
+En cuanto a las medias en la precisión y en la desviación típica, también son valores muy similares a los obtenidos en la ejecución inicial. Sin embargo, son valores similares a los árboles sin una profundidad determinada, es decir, que hemos conseguido un porcentaje de acierto y una desviación típica tan buena como los anteriores pero con una profundidad de árbol limitada. También hay que tener en cuenta el número de árboles utilizados, pero si se ha seleccionado este modelo como el mejor, es porque merece más la pena tener un mayor número de árboles con una profundidad limitada que tener pocos árboles con mucha profundidad. Esto se debe a que los primeros se han podado a priori y los segundos, al no haber especificado una profundidad máxima, no se han podado, con lo cuál son más sensibles al sobreajuste.
+
+Como conclusión, decir que nos vamos a quedar con este último modelo de Random Forest obtenido como el mejor clasificador para el problema. Ya vimos anteriormente que los Random Forest eran el mejor modelo (o de los mejores) en la ejecución inicial, y como acabamos de comprobar, ajustando los modelos no hay ninguno que llegue a su nivel. También añadir que 
 
 \section{\textsc{Evaluación del mejor modelo}}
 
