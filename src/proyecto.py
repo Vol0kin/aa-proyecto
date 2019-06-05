@@ -3,6 +3,18 @@
 PROYECTO FINAL
 Autores: Vladislav Nikolov Vasilev
          Jose Maria Sanchez Guerrero
+
+NOTA: Debido a que los tiempos de ejecución son
+muy grandes, no se van a mostrar ciertos aspectos
+que si que se pueden ver en la memoria, como por
+ejemplo las curvas de aprendizaje de todos los modelos
+que se evaluan, ya que en total, se tardan aproximadamente
+30 minutos en tenerlas todas.
+
+Hay un parametro en la funcion evaluate_models booleano
+llamado plot_learn, el cual controla cuando mostrar las curvas
+y cuando no. Si se quieren ver, en la llamada se tiene que poner
+ese parametro a True (por defecto viene a false).
 """
 
 # Modulos generales
@@ -219,7 +231,8 @@ def evaluate_models(models, X, y, model_names, cv=10, metric='accuracy',
     # evaluar el modelo con todas las particiones
     # Guardar los resultados en las listas correspondientes
     for idx,model in enumerate(models):
-        results = cross_val_score(model, X, y, scoring=metric, cv=cv)
+        results = cross_val_score(model, X, y, n_jobs=4,
+                                  scoring=metric, cv=cv)
 
         # Guardar valor medio de los errores
         # Se guarda el valor absoluto porque son valores negativos
@@ -334,8 +347,11 @@ def plot_learning_curve(model, title, X, y, cv=None,
 print('IMAGE SEGMENTATION DATA SET\n')
 print('Reading data...')
 
+# Leer los datos de training y test
 df1 = read_data_values('datos/segmentation.data')
 df2 = read_data_values('datos/segmentation.test')
+
+# Juntar los dos conjuntos en uno solo
 df = pd.concat([df1,df2])
 
 print('Data read!')
@@ -365,12 +381,10 @@ print('Getting X and y values from data...')
 X, y = divide_data_labels(df)
 
 # Dividir los datos en training y test
-# Conservar proporcionalidad de clase
+# Conservar proporcionalidad de clase mezclando los datos
 print('Splitting data in training and test sets...')
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
-                                                    random_state=1,
-                                                    shuffle=True,
-                                                    stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=1, shuffle=True, stratify=y)
 
 # Crear lista con titulos de columnas (nombres de atributos y clase)
 attributes = ['RCL', 'RCR', 'RPC', 'SLD5', 'SLD2', 'VMean', 'VStd',
@@ -407,10 +421,10 @@ input('\n---Press any key to continue---\n\n')
 #########################################################
 # Eliminar variables con alta correlacion
 
-print('Removing correlated variables from training and test...')
+print('Removing useless attributes from training and test...')
 
 # Crear lista de variables a eliminar
-rm_list = [2, 10, 11, 12, 16]
+rm_list = [2]
 
 X_train = np.delete(X_train, rm_list, axis=1)
 X_test = np.delete(X_test, rm_list, axis=1)
@@ -490,7 +504,7 @@ mlr = LogisticRegression()
 # Aplicar GridSearch con Cross Validation para determinar
 # la mejor combinacion de parametros
 grid_search = GridSearchCV(mlr, param_grid=param_grid_lr, cv=cv,
-                           scoring='accuracy')
+                           n_jobs=4, scoring='accuracy')
 
 # Aplicar GridSearch para obtener la mejor combinacion de hiperparametros
 print('Applying grid search...')
@@ -515,7 +529,7 @@ print('Tunning hyperparameters for Random Forest...')
 
 # Crear grid de hiperparametros que se van a probar
 print('Creating parameters grid...')
-param_grid_rf = [{'n_estimators': np.linspace(100, 500, 9, dtype=np.int),
+param_grid_rf = [{'n_estimators': np.linspace(50, 500, 10, dtype=np.int),
                   'max_depth': np.linspace(5, 15, 6, dtype=np.int),
                   'random_state': [1]}]
 
@@ -524,7 +538,7 @@ print('Creating model...')
 rf = RandomForestClassifier()
 
 grid_search2 = GridSearchCV(rf, param_grid=param_grid_rf, cv=cv,
-                            scoring='accuracy')
+                            n_jobs=4, scoring='accuracy')
 
 # Aplicar GridSearch para obtener la mejor combinacion de hiperparametros
 print('Applying grid search...')
@@ -598,8 +612,8 @@ plt.show()
 input('\n---Press any key to continue---\n\n')
 
 # Curvas de aprendizaje de Random Forest
-plot_learning_curve(RandomForestClassifier(n_estimators=150, max_depth=13, random_state=1),
-                    title='Random Forest n_estiamtors = 150 Depth = 13 levels',
+plot_learning_curve(RandomForestClassifier(n_estimators=400, max_depth=15, random_state=1),
+                    title='Random Forest n_estiamtors = 400 Depth = 15 levels',
                     X=X_train, y=y_train, cv=cv)
 
 input('\n---Press any key to continue---\n\n')

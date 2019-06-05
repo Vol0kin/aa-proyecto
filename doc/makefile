@@ -1,5 +1,12 @@
 .PHONY: clean
-FILES = memoria.aux memoria.log memoria.out memoria.synctex.gz memoria.toc
+IN = memoria
+FILES = $(IN).aux $(IN).log $(IN).out $(IN).synctex.gz $(IN).toc
+CXX = pdflatex
+
+all: $(IN).pdf clean 
+
+$(IN).pdf: $(IN).tex
+	$(CXX) $<
 
 clean:
 	@echo Limpiando archivos extra generados por LaTex...
