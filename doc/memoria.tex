@@ -248,16 +248,8 @@ los datos de los que disponemos.
 
 \section{\textsc{Análisis de los datos}}
 
-Para comenzar con el análisis de los datos que tenemos, lo primero tenemos que hacer es, obviamente leer los datos. Para
-ello, vamos a comenzar cargándolos en estructuras que nos permita almacenar tanto los datos de entrenamiento como los de
-test para posteriormente juntarlos en una única:
+En esta sección vamos a realizar un estudio de los datos para ver qué información nos pueden ofrecer sobre el problema.
 
-
-
-Con los datos ya cargados, nos interesa
-Posteriormente, tal y como dijimos en la sección anterior, vamos a juntar los datos en un solo conjunto para
-dividirlos y crear nuestros propios conjuntos de entrenamiento y de test. para poder posteriormente juntar los datos, tal y como dijimos que haríamos en la sección anterior por disponer de
-demasiados poco, y posteriormente los vamos a juntar, tal y como dijimos en la sección anterior.
 
 \newpage
 
@@ -317,11 +309,11 @@ El resultado de ejecutar todo esto ha sido el siguiente:
     \label{fig:gs-lr}
 \end{figure}
 
-Como podemos observar, el método ha selecciona el mismo valor para el hiperparámetro $C$ que el que nosotros habíamos prefijado en las pruebas iniciales (1.0). Este valor es el que también trae la función por defecto, y acabamos de comprobar el porque. Valores más bajos hacen que la regularización sea muy fuerte, mientras que con valores más altos el sobreajuste aparecerá debido a que los errores tendrán una mayor penalización.
+Como podemos observar, el método ha seleccionado como valor para el hiperparámetro $C = 0.5$, el cual no habíamos prefijado en las pruebas iniciales (0.1, 1.0, 5.0). Este valor está bastante bien estimado, ya que valores más bajos, como 0.1, hacen que la regularización sea muy fuerte, mientras que con valores más altos, como 5.0, el sobreajuste aparecerá debido a que los errores tendrán una mayor penalización. Lo lógico sería elegir valores por este rango de 0.5-1.0 aproximadamente, ya que son los que evitan los problemas anteriores.
 
-Si nos paramos a analizar tanto la precisión como la desviación típica hay poco que comentar. Como los hiperparametros utilizados han sido los mismos que en las pruebas iniciales, los valores que han obtenido han sido prácticamente iguales que los anteriores, con un decimal o dos de diferencia, pero prácticamente es insignificativo.
+Si nos paramos a analizar tanto la precisión como la desviación típica, los valores obtenidos con este nuevo hiperparámetro son peores, a priori. Tenemos que tener en cuenta que este valor es calculado en $cross-validation$, y los valores más malos vienen a partir del tercer decimal. Lo que nos lleva a decir que este modelo está mejor ajustado es que el valor de $C$ ha sido seleccionado de forma que se regulariza en una medida apropiada para conseguir buenos resultados.
 
-Concluimos que, pese a no haber mejorado porque ya habíamos elegido los valores más adecuados, el modelo sigue clasificando bastante bien. No obstante, no lo seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las Redes Neuronales, aunque habría que estudiarlo en términos de eficiencia y simplicidad), y aún no hemos estudiado sus hiperparámetros y si estos pueden hacer que mejore.
+Concluimos que, pese a no haber mejorado los resultados iniciales, el modelo sigue clasificando bastante bien. No obstante, no lo seleccionaríamos como el mejor modelo, ya que los clasificadores Random Forest lo hacen mejor con una complejidad similar (e incluso las Redes Neuronales, aunque habría que estudiarlo en términos de eficiencia y simplicidad), y aún no hemos estudiado sus hiperparámetros y si estos pueden hacer que mejore.
 
 \subsection{Random Forest}
 
@@ -329,7 +321,7 @@ Es el turno de Random Forest, el modelo que mejores resultados ha obtenido en cu
 
 \begin{lstlisting}
 # Crear grid de hiperparametros que se van a probar
-param_grid_rf = [{'n_estimators': np.linspace(100,500,9,dtype=np.int),
+param_grid_rf = [{'n_estimators': np.linspace(50,500,10,dtype=np.int),
                   'max_depth': np.linspace(5, 15, 6, dtype=np.int),
                   'random_state': [1]}]
 
@@ -338,7 +330,7 @@ rf = RandomForestClassifier()
 
 \end{lstlisting}
 
-Para el hiperparámetro $n\_estimators$, que determina el número de árboles, generamos una muestra de tamaño 9 con valores que van desde el 100 hasta el 500; y para $max\_depth$, que determina la profundidad de los árboles, generaremos otra muestra, en este caso de tamaño 6 y con valores que van desde el 5 hasta el 15. El último hiperparámetro también será $random\_state$, que al igual que antes, es la semilla para los aleatorios.
+Para el hiperparámetro $n\_estimators$, que determina el número de árboles, generamos una muestra de tamaño 10 con valores que van desde el 50 hasta el 500; y para $max\_depth$, que determina la profundidad de los árboles, generaremos otra muestra, en este caso de tamaño 6 y con valores que van desde el 5 hasta el 15. El último hiperparámetro también será $random\_state$, que al igual que antes, es la semilla para los aleatorios.
 
 Como la técnica para realizar la búsqueda de los mejores valores es la misma que la utilizada anteriormente en Regresión Logística, no la vamos a volver a explicar, simplemente pasemos a ver los resultados que nos ha dado:
 
@@ -349,7 +341,7 @@ Como la técnica para realizar la búsqueda de los mejores valores es la misma q
     \label{fig:gs-lr}
 \end{figure}
 
-Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 150, es decir, más alto......... [esperar a confirmar]; mientras que para $max\_depth$ los mejores resultados se han dado con una profundidad de 13, por lo que es mejor... [esperar a confirmar].
+Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el modelo inicial, lo cual nos dice que tendríamos que haber probado con un número de árboles superior a  los prefijados. Por  para $max\_depth$ los mejores resultados se han dado con una profundidad de 13, por lo que es mejor... [esperar a confirmar].
 
 \section{\textsc{Evaluación del mejor modelo}}
 
