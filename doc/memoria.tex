@@ -305,9 +305,46 @@ De la figura anterior, podemos sacar algunas conclusiones:
     \item Tal y como nos indicaba la información del repositorio, existe un atributo que es constante, y que por tanto, no aporta
     ninguna información. Este atributo es el \textit{Region-pixel-count}, y se puede ver que en la figura no aparece ninguna
     información sobre éste. Por tanto, al ser un atributo ``inútil'', \textbf{va a ser eliminado}.
-    \item Existen algunas variables que están más correlacionadas que 
-    
+    \item Existen algunas variables que están más correlacionadas con la salida que otras. Sin embargo, al estar en un problema
+    de clasificación, esta no es una información muy relevante, % TODO
+    \item Existen una serie de variables de entrada que están bastante correlacionadas entre sí, ya que sus coeficientes de correlación de
+    Pearson son 1, lo cuál significa que existe una correlación lineal entre ellas y que siempre que alguna de ellas crezca, la otra también
+    lo hará. Esto nos podría indicar que podríamos eliminar algunos de estos atributos, ya que en un principio parecen aportar información
+    redundante. Sin embargo, \textbf{no vamos a eliminar ninguna de las variables de entrada correlacionadas}, debido a que si decidimos
+    eliminarlas a mano solo por tener una correlación lineal podríamos estar cometiendo un error, ya que nada nos asegura que esas variables
+    no aportan información útil. Además, estaríamos tomando decisiones que podrían afectar posteriormente al modelo, y por tanto, sería
+    mejor dejar que los modelos como tal decidan si esas variables son importantes o no en vez de hacerlo nosotros.
 \end{itemize}
+
+Con esto dicho, ya que hemos visto que existe una variable que no nos aporta ninguna información por el hecho de que es constante, vamos
+a eliminarla tanto del conjunto de entrenamiento como el de test. Esto lo vamos a hacer a continuación mediante el siguiente código:
+
+\begin{lstlisting}
+# Crear lista de variables a eliminar
+rm_list = [2]
+
+# Eliminar variables de training y test
+X_train = np.delete(X_train, rm_list, axis=1)
+X_test = np.delete(X_test, rm_list, axis=1)
+\end{lstlisting}
+
+Habiendo eliminado esta variable, nos quedamos con 18 variables que vamos a utilizar en nuestro problema. Cada modelo ponderará a estas
+variables de una forma u otra, dándoles diferente importancia.
+
+Una vez concluido este pequeño análisis, vamos a pasar a comentar qué métricas vamos a utilizar para evaluar los modelos, antes de ver
+exactamente cuáles de ellos utilizaremos.
+
+\newpage
+
+\section{\textsc{Elección de las métricas a utilizar}}
+
+Está claro que, para comparar los distintos modelos y elegir a los mejores de entre ellos, necesitamos alguna métrica que nos permita
+ver cómo de buenos son sus rendimientos. Como estamos en un problema de clasificación, parece que la \textit{accuracy} es la mejor elección,
+ya que es una métrica que indica cuántos elementos ha predicho el modelo correctamente sobre el número total de elementos. Además de eso,
+la interpretación de esta métrica es muy sencilla e intuitiva, lo cuál no hace más que acentuar su idoneidad en este caso.
+
+Con el modelo ya elegido, nos interesaría conocer algo más de información sobre su rendimiento. Sería interesante, por ejemplo, saber
+qué proporción de los
 
 \newpage
 
@@ -443,7 +480,7 @@ vamos a volver a explicar, simplemente pasemos a ver los resultados que nos ha d
     \centering
     \includegraphics[scale=0.6]{img/gs-rf.png}
     \caption{Resultados de \textit{GridSearch} sobre Random Forest.}
-    \label{fig:gs-lr}
+    \label{fig:gs-rf}
 \end{figure}
 
 Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 400, es decir, más alto (más número de árboles) que en el
@@ -481,7 +518,47 @@ Podemos observar que estamos utilizando el clasificador con los parámetros por 
 
 Posteriormente, vamos a entrenar nuestro mejor modelo. Como estamos utilizando el que acabamos de ajustar y hemos clasificado como el mejor, no vamos a volver a explicar cómo se ha hecho. Simplemente, recordar que hemos utilizado un Random Forest con los hiperparámetros ajustados a 400 árboles con una profundidad máxima de 15.
 
+A continuación, pasemos a la evaluación del modelo y a analizar los resultados obtenidos. Para ello vamos a mostrar las siguientes métricas para cada uno de los dos modelos: $accuracy$, $recall$ y $precision$. Lo realizaremos gracias a las siguientes líneas de código:
 
+\begin{lstlisting}
+# Obtener metricas
+dummy_score = accuracy_score(y_test, y_predicted_dummy)
+rf_score = accuracy_score(y_test, y_predicted_rf)
+
+dummy_recall = recall_score(y_test, y_predicted_dummy,
+                            average='macro')
+rf_recall = recall_score(y_test, y_predicted_rf,
+                         average='macro')
+
+dummy_precision = precision_score(y_test, y_predicted_dummy,
+                                  average='macro')
+rf_precision = precision_score(y_test, y_predicted_rf,
+                               average='macro')
+\end{lstlisting}
+
+Los parámetros que les pasamos son las etiquetas que esperamos obtener, las etiquetas que ha predicho cada uno de los modelos y, con $average$, el tipo de medias que obtendremos. En nuestro caso, con el valor $'macro'$, obtendremos la media estándar sin ponderar. Los resultados ha sido los siguientes:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{img/model-comp-scores.png}
+    \caption{Comparativa de métricas para evaluar el mejor modelo.}
+    \label{fig:model-comp-scores}
+\end{figure}
+
+A simple vista nos damos cuenta de que un modelo aleatorio como el Dummy no es capaz de clasificar este problema correctamente. Podemos ver que ha obtenido unos resultados muy malos (simplemente con observar el $13\%$ aproximado para los tres parámetros a estudiar, ya nos dice que este problema tiene una complejidad a la hora de clasificar).
+
+En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos). Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
+
+Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que los parámetros obtenidos anteriores son correctos:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/confusion-matrix.png}
+    \caption{Matriz de confusión de nuestro modelo ajustado.}
+    \label{fig:confusion-matrix}
+\end{figure}
+
+Antes de analizarla, vamos a explicar que significa y que representa cada uno de sus valores. La matriz de confusión nos permite ver más detalladamente el rendimiento de un algoritmo a través de sus dos dimensiones, una con los valores reales y la otra con los que hemos predicho. En el ejemplo 
 
 \newpage
 
