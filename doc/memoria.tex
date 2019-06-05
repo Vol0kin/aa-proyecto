@@ -170,15 +170,14 @@ continuación.
 
 \newpage
 
-\section{\textsc{Preprocesado y transformación de los datos de entrada}}
+\section{\textsc{Preprocesado de los datos de entrada}}
 
-En esta sección vamos a comentar las transformaciones que hemos realizado sobre los datos originales para adaptarlos
+En esta sección vamos a comentar el preprocesado que hemos hecho a los datos de entrada. Es decir, vamos a ver cómo y por qué juntamos
+los dos conjuntos de datos y luego los separamos (tal y como dijimos en la sección anterior) y vamos a ver que modificaciones hacemos
+sobre éstos para que nos sea más fácil trabajar posteriormente con ellos y para adaptarlos mejor al problema que queremos resolver.
 
-\section{\textsc{Análisis de los datos}}
-
-Para comenzar con el análisis de los datos que tenemos, lo primero tenemos que hacer es, obviamente leer los datos. Para
-ello, vamos a comenzar cargándolos en estructuras que nos permita almacenar tanto los datos de entrenamiento como los de
-test para posteriormente juntarlos en una única:
+Vamos a comenzar leyendo los datos y almacenándolos en estructuras de datos que nos permitan el fácil acceso a éstos. Posteriormente,
+tal y como dijimos anteriormente, vamos a juntar los dos conjuntos en uno solo. Esto se puede ver a continuación:
 
 \begin{lstlisting}
 # Leer los datos de training y test
@@ -188,6 +187,72 @@ df2 = read_data_values('datos/segmentation.test')
 # Juntar los dos conjuntos en uno solo
 df = pd.concat([df1,df2])
 \end{lstlisting}
+
+Nuestro objetivo al hacer esto es disponer de todos los datos de forma conjunta para luego poder crear nuestras propias particiones de
+entrenamiento y de test, debido a que, como hemos dicho anteriormente, la cantidad de datos de entrenamiento de la que disponemos es
+muy pequeña. Como no existe una justificación para no crear nuestras propias particiones, vamos a crearlas de tal forma que tengamos más
+datos de entrenamiento que de test, conservando además la forma en la que cada clase está representada. Con esto, obtendremos un 
+mejor modelo, ya que tendremos más datos con los que entrenarlo, y por tanto, va a generalizar mejor.
+
+Sin embargo, antes de realizar las particiones, vamos a transformar las clases originales a valores numéricos, para que el trabajar
+con ellas posteriormente sea más sencillo. Vamos a asignar a cada etiqueta un número. Como tenemos 7 clases, asignaremos un número
+en el rango $[0, 6]$ a cada una de ellas, de forma que no se repita ningún número para ninguna etiqueta. Esta asignación se puede ver a
+continuación:
+
+\begin{lstlisting}
+# Valor numerico asignado a cada etiqueta
+labels_to_values = { 'BRICKFACE' : 0, 'SKY' : 1, 'FOLIAGE' : 2,
+                     'CEMENT': 3, 'WINDOW' : 4, 'PATH' : 5,
+                     'GRASS' : 6 }
+\end{lstlisting}
+
+Ahora ya solo nos quedaría aplicar el \textit{mapping}. Como todavía no hemos separado las etiquetas de los datos y sabiendo que, gracias
+a la información proporcionada por el repositorio, la etiqueta se encuentra en la primera columna, la sustitución se puede hacer de forma
+sencilla de la siguiente manera:
+
+\begin{lstlisting}
+# Sustituir etiquetas de salida por valores numericos discretos
+df[0] = df[0].map(labels_to_values)
+\end{lstlisting}
+
+Con esto ya hecho, ya podemos dividir los datos en los valores de entrada $\mathcal{X}$ y las etiquetas $y$ y posteriormente dividir
+éstos en los conjuntos de entrenamiento y de test. Queremos que el 80\% de los datos de los que disponemos esté en el conjunto de
+entrenamiento y que el 20\% restante esté en el de test. Además, tal y como se mencionó anteriormente, queremos que las clases estén
+igualmente representadas en los dos conjuntos en función de la cantidad de muestras que hay en total de cada clase. También es importante
+mezclar los datos, con tal de que la elección de qué muestra va a cada conjunto no sea decidida por el orden de las muestras, si
+no que se haga de forma aleatoria.
+
+Se ha escogido esta repartición de los datos ya que nos permite tener un número suficientemente grande de muestras para entrenar nuestro
+modelo y una cantidad aceptable de datos para ver como se desempeña con datos nunca vistos antes. La desventaja de hacer \textit{hold-out}
+(que es lo que estamos haciendo aquí) es que perdemos datos para entrenar nuestro modelo, datos con los que, muy posiblemente, pudiésemos
+obtener unos mejores resultados. Sin embargo, siguiendo este enfoque, tendremos al menos una forma de ver cómo de bien funciona nuestro
+modelo con nuevos datos con los que nunca antes había interaccionado.
+
+Vamos a ver ahora como se realizaría esta partición de los datos:
+
+\begin{lstlisting}
+# Obtener valores X, Y
+X, y = divide_data_labels(df)
+
+# Dividir los datos en training y test
+# Conservar proporcionalidad de clase mezclando los datos
+print('Splitting data in training and test sets...')
+X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=1, shuffle=True, stratify=y)
+\end{lstlisting}
+
+Y con todo esto visto, pasemos ahora a la parte de análisis de los datos, la cuál nos va a permitir obtener más información acerca de
+los datos de los que disponemos.
+
+\newpage
+
+\section{\textsc{Análisis de los datos}}
+
+Para comenzar con el análisis de los datos que tenemos, lo primero tenemos que hacer es, obviamente leer los datos. Para
+ello, vamos a comenzar cargándolos en estructuras que nos permita almacenar tanto los datos de entrenamiento como los de
+test para posteriormente juntarlos en una única:
+
+
 
 Con los datos ya cargados, nos interesa
 Posteriormente, tal y como dijimos en la sección anterior, vamos a juntar los datos en un solo conjunto para
@@ -285,6 +350,9 @@ Como la técnica para realizar la búsqueda de los mejores valores es la misma q
 \end{figure}
 
 Podemos ver que el mejor valor que ha encontrado para el $n\_estimators$ ha sido 150, es decir, más alto......... [esperar a confirmar]; mientras que para $max\_depth$ los mejores resultados se han dado con una profundidad de 13, por lo que es mejor... [esperar a confirmar].
+
+\section{\textsc{Evaluación del mejor modelo}}
+
 
 
 \newpage
