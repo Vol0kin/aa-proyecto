@@ -15,6 +15,10 @@
 \usepackage{amsmath}						% Símbolos matemáticos
 \usepackage{listings}
 \usepackage{algorithm}
+\usepackage{amssymb}
+
+% no accents in math operators
+\unaccentedoperators
 
 \usepackage{color}
  
@@ -165,8 +169,7 @@ Como estamos en un problema de clasificación, cada entrada produce una salida q
 referencia a una de las 7 clases que tiene el problema, las cuáles son: \textit{brickface}, \textit{sky},
 \textit{foliage}, \textit{cement}, \textit{window}, \textit{path} y \textit{grass}. Para facilitar la representación de
 las clases, vamos a transformar posteriormente cada valor de las etiquetas a un valor numérico. Esto se verá con más
-detalle en la siguiente sección, en la que hablaremos del preprocesado realizado sobre los datos.
-continuación.
+detalle en secciones posteriores, cuando hablemos del preprocesado de los datos de entrada.
 
 \newpage
 
@@ -174,22 +177,24 @@ continuación.
 
 El análisis y la elección de los modelos para nuestro problema va a tener varias fases, las cuales vamos a detallar a continuación:
 \begin{itemize}[label=\textbullet]
-\item Lo primero será el \textbf{preprocesado y análisis de los datos}, en el cual partiremos leyendo los datos de los ficheros
+\item Lo primero será el \textbf{preprocesado y análisis de los datos}, donde empezaremos leyendo los datos de los ficheros
 proporcionados y los manipularemos para obtener un conjunto de datos con el que trabajaremos más cómodamente. Posteriormente se realizará
 un estudio del conjunto de datos con la finalidad de conocer mejor el problema y cada uno de sus atributos y clases.
-\item Después elegiremos las \textbf{métricas a utilizar}, donde seleccionamos una serie de valores que nos permitan comparar los modelos.
+\item Después elegiremos las \textbf{métricas a utilizar}, donde seleccionaremos una serie de valores que nos permitan comparar los modelos.
 Con una buena métrica podremos ver cómo de bueno es el rendimiento que nos ofrecen.
-\item A continuación, seleccionaremos los \textbf{modelos a evaluar}, apartado en el que explicaremos cada una de las técnicas que
-utilizaremos para clasificar nuestros datos, cómo las hemos implementado y algunos detalles más específicos de cada una de ellas.
-\item Tras seleccionarlos, después tocará la \textbf{evaluación y comparación de los modelos}, donde los ejecutaremos, analizaremos los
-resultados obtenidos y, a partir de ellos, compararemos unos con otros. ¿El análisis incluye las funciones de pérdida utilizadas, curvas
-de aprendizaje, etc? (No se si dejarlo asi).
+\item A continuación, \textbf{seleccionaremos los modelos a evaluar } y comentaremos brevemente cuáles son las \textbf{funciones de pérdida}
+que utiliza cada modelo, además de comentar muy brevemente la aplicación de regularización a cada modelo.
+\item Tras seleccionarlos tocará \textbf{evaluar y comparar los distintos modelos}, donde describiremos con más detalle la metodología
+de evaluación seguida, probaremos los distintos modelos, analizaremos los resultados obtenidos y, a partir de ellos, compararemos el
+rendimiento ofrecido por cada uno de ellos.
 \item Una vez hayamos analizado los modelos, tendremos que \textbf{elegir y ajustar los mejores modelos}, donde utilizaremos los resultados
-anteriores para seleccionar los que nos hayan funcionado mejor y luego ajustaremos sus hiperparámetros para intentar mejorarlos aun más.
+anteriores para seleccionar los que hayan funcionado mejor y luego ajustaremos sus hiperparámetros para intentar mejorarlos aun más.
 \item Por último, vamos a \textbf{evaluar el mejor modelo}, es decir, una vez ajustados los mejores y decido cuál es el que nos va a resultar
-más útil en nuestro problema, veremos como se enfrenta al conjunto de \textit{testing}. Analizaremos los resultados y concluiremos si
-hemos tomado una buena decisión al elegir ese modelo.
+más útil en nuestro problema, veremos como se enfrenta al conjunto de test. Analizaremos los resultados y concluiremos si hemos tomado una
+buena decisión al elegir ese modelo.
 \end{itemize}
+
+\newpage
 
 \section{\textsc{Preprocesado de los datos de entrada}}
 
@@ -403,9 +408,120 @@ Con lo cuál, nos interesa saber, de media, qué valores de \textit{recall} y \t
 
 \section{\textsc{Elección de los modelos a evaluar}}
 
-\section{\textsc{Funciones de pérdida utilizadas}}
+Una vez que hemos hablado de las métricas que vamos a utilizar para evaluar los distintos modelos, es hora de pasar a comentar la parte más
+importante de todas, sin la cuál no tendría sentido nada de lo que estamos haciendo: los modelos. Hablaremos brevemente de qué modelos hemos
+elegido y el por qué de cada uno de ellos.
 
-\section{\textsc{Proceso de evaluación de modelos}}
+\subsection{Regresión Logística Multinomial}
+
+El primer modelo que hemos elegido es la Regresión Logística Multinomial, el cuál es un modelo lineal y es una generalización de la Regresión
+Logística para múltiples clases. Esto último ha sido uno de los motivos principales por los que ha sido escogido, ya que permite trabajar con
+múltiples clases, que es justamente lo que tenemos en este problema.
+
+Existen otros muchos modelos que son variantes de la Regresión Logística para múltiples clases, como por ejemplo la Regresión Logística con
+\textit{one-vs-rest}, donde se tienen $K$ modelos diferentes, donde $K$ es el número de clases. Cada modelo es un clasificador binario que
+mide la probabilidad de que el elemento pertenezca a esa clase y la probabilidad de que el elemento no pertenezca a esa clase. Sin embargo,
+en la Regresión Logística Multinomial hay un solo modelo que da $K$ probabilidades, las cuáles indican la probabilidad de que el elemento
+pertenezca a cada una de las $K$ clases. Esto otra ventaja, ya que es mucho más intuitivo saber cuáles es la probabilidad real de pertenecer
+a cada una de las $K$ clases para un dato de entrada.
+
+La función de pérdida o \textit{loss function} que utiliza este modelo es la \textbf{Multi-class Cross Entropy}, una generalización de la
+\textbf{Cross Entropy}, la cuál se utiliza en la Regresión Logística para dos clases. Esta función viene dada por la siguiente expresión:
+
+\begin{equation}
+\label{eq:mult-cross-entropy}
+E(\mathbf{w_1}, \mathbf{w_2}, \dots, \mathbf{w}_K) = -\sum_{n=1}^N \sum_{k=1}^{K} y_{nk} \ln \Big(\sigma (\mathbf{w}_K^T \mathbf{x}_n)\Big)
+\end{equation}
+
+En cuanto a la regularización, como sabemos, nunca viene mal regularizar el modelo que estamos entrenando, ya que evitamos problemas de
+\textit{overfitting} o sobreajuste, siempre y cuando el valor de $\lambda$ (hiperparámetro que pondera la regularización) sea el adecuado. 
+En este caso, el modelo utilizará regularización de tipo $\ell 2$, debido a que la regularización $\ell 1$ se encargaría de eliminar ciertas
+características asignándoles el valor 0, considerándolas como poco importantes. Al tener nosotros un número bastante pequeño de
+características, no nos interesa mucho eliminar alguna de ellas, ya que podríamos perder información significativa.
+
+\subsection{Support Vector Machine con \textit{kernel} RBF}
+
+El segundo modelo que queremos evaluar es el SVM con \textit{kernel} RBF, un \textit{kernel} no lineal. Se ha escogido este \textit{kernel}
+porque en general, en problemas de clasificación ofrece resultados bastante buenos y es bastante rápido. Hemos escogido este modelo porque,
+aparte de encontrar una separación entre las clases, SVM también intenta buscar la separación óptima, dejando un margen suficiente a cada
+lado, de forma que ningún punto caiga dentro de ese margen. Por tanto, está buscando también una separación \textbf{óptima} entre las clases.
+
+Como muchas veces esto no es posible o los datos no son linealmente separables, se tienen que tolerar algunas violaciones de margen, dejando
+que haya puntos dentro del margen o que no se hayan clasificado bien. Esto viene definido por el hiperparámetro $C$, el cuál indica cuál
+es la importancia asociada a esta violación del margen. A menor peso, menos importancia, y por tanto, se consigue una separación más
+regularizada y un margen más grande.
+
+Este modelo funciona de forma diferente al SVM con \textit{kernel} lineal, ya que clasifica los datos por similaridad a los de la muestra.
+Esta similaridad viene dada por la distancia euclídea. A mayor similaridad, menor la distancia. También está influida por un parámetro
+$\gamma$, el cuál indica cuál es la influencia de ese punto. A mayor $\gamma$, menor influencia tendrán los puntos de la muestra, con lo cuál,
+solo puntos muy cercanos a ellos podrán clasificarse como cercanos. A menor $\gamma$, más influencia tendrán los puntos de la muestra, y por
+tanto, un nuevo punto podrá ser considerado como similar aún situándose bastante lejos del de la muestra. Este parámetro también define
+cierto grado la regularización, ya que cuanto mayor sea el valor, mayor tendencia al sobreajuste, mientras que si es demasiado pequeño,
+el modelo puede quedarse corto y sufrir de \textit{underfitting}.
+
+La función de pérdida que utiliza este modelo, al igual que las otras variantes de SVM, es el \textbf{Hinge Loss}, el cuál tiene la siguiente
+forma:
+
+\begin{equation}
+\label{eq:hinge-loss}
+E_{SVM}(b, \mathbf{w}) = \frac{1}{N} \sum_{n=1}^N \max(1 - y_n \mathbf{w}^T\mathbf{x}_n + b , 0)
+\end{equation}
+
+\noindent la cuál no puede ser minimizada directamente al no ser derivable, si no que debe ser transformada y se debe resolver en el problema
+dual.
+
+En cuanto a la regularización, hay dos parámetros que influyen que se han comentado anteriormente, que son $\gamma$ y $C$. Por tanto, se
+intentará controlar el parámetro $C$ a la hora de evaluar el modelo para hacer que no se obtenga un modelo muy ajustado a los puntos, y por
+tanto, con sobreajuste.
+
+\subsection{Random Forest}
+
+El tercer modelo que queremos evaluar es el Random Forest, el cuál representa una mejora sobre los árboles de decisión clásicos y la técnica
+de \textit{bagging}. Este modelo permite tener múltiples árboles de decisión los cuáles son entrenados cada uno con una muestra de datos
+escogidos mediante \textit{bootsrap} de la original. Además, cada árbol escoge un subconjunto de predictores que va a utilizar para intentar
+predecir, con el objetivo de evitar el problema de \textit{bagging} en el cuál la mayoría de árboles estaban correlacionados. Si
+existe un predictor muy fuerte, este será utilizado casi siempre en la primera partición que se hace de los datos en cada árbol, haciendo por
+tanto que la mayoría de árboles sea parecido.
+
+Se ha escogido este modelo porque es un modelo que ofrece unos resultados muy buenos en general ya que tiene un bajo sesgo y una baja varianza
+al tener múltiples árboles, que además no están correlacionados, lo cuál hace que la media de la varianza del modelo sea aún menor.
+
+Como tal, la técnica de Random Forest no utiliza una función de pérdida, ya que no intenta minimizar nada. Sin embargo, sigue algún tipo de
+heurística subyacente que permite construir el árbol con los datos de los que se dispone.
+
+En cuanto a la regularización de este modelo, a pesar de que como tal ya ofrece una varianza baja, nunca está de más intentar hacer que
+los árboles sean menos susceptibles al sobreajuste limitando la profundidad de éstos, por ejemplo (es decir, podando los árboles a priori).
+
+\subsection{Redes Neuronales}
+
+El último modelo que queremos evaluar son las Redes Neuronales. Concretamente, queremos probar un \textit{Multilayer Perceptron} o Perceptrón
+Multicapa, el cuál es usado ampliamente en problemas de clasificación.
+
+Hemos escogido este modelo ya que, en general, las Redes Neuronales permiten obtener unos resultados muy buenos en problemas complejos.
+Como trabajan con capas de Perceptrones, se pueden conseguir separaciones de los datos en clases que con un Perceptrón simple nunca se
+podrían conseguir, ofreciendo por tanto unos mejores resultados. Sin embargo, los tiempos de cómputo no acompañan a estos resultados, ya que
+son modelos costosos desde el punto de vista computacional, además de que requieren una gran cantidad de datos. Sin embargo, consideramos que
+la cantidad de datos de entrenamiento de la que disponemos después de crear nuestra propia partición de entrenamiento es suficiente, además
+de que la arquitectura de la red no será muy compleja, en general.
+
+La función de pérdida que utiliza este modelo es la misma que en la Regresión Logística Multinomial. Es decir, utiliza la \textbf{Multi-class
+Cross Entropy}, la expresión de la cuál se puede ver en \eqref{eq:mult-cross-entropy}.
+
+Aunque existan diversas técnicas de regularización como por ejemplo el \textit{early stopping}, hemos decidido no utilizar ningún tipo de
+regularización a sabiendas de que existe cierto riesgo a que se produzca sobreajuste. Sin embargo, queremos ver su comportamiento sin
+regularizar respecto a los otros modelos, para ver como se comportan.
+
+\section{\textsc{Descripción del proceso de evaluación de modelos}}
+
+Una vez vistos los modelos, vamos a pasar a ver cómo será la evaluación de éstos, describiendo el proceso seguido y las consideraciones que
+se han tomado.
+
+Para evaluar los distintos modelos, ya que queremos dejar el conjunto de test para el mejor modelo con tal de estimar su error fuera de la
+muestra, podemos utilizar el conjunto de entrenamiento, y con él hacer un \textbf{10-fold cross-validation}. Es decir, podemos dividir
+la muestra que tenemos en 10 particiones disjuntas del mismo tamaño o casi iguales (dependiendo de la cantidad de elementos de los que
+dispongamos). Además, como estamos en un problema de clasificación, nos interesa que esos conjuntos disjuntos contengan un número proporcional
+de elementos de cada clase respecto a la proporción de elementos totales de cada clase que había en el conjunto original, de forma que
+los distintos conjuntos no estén desequilibrados en cuanto a elementos de una clase y para poder conservar esa proporcionalidad.
 
 \section{\textsc{Evaluación y comparación de modelos}}
 
@@ -425,17 +541,19 @@ entre el 96\% y el 97\%, y los valores de las desviaciones típicas también son
 tendremos que tener en cuenta más cosas a parte de estas.
 
 Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algunos detalles más significativos en ellas:
+
 \begin{itemize}[label=\textbullet]
 \item Si empezamos por las de Regresión Logística, vemos que las curvas son bastante suaves  para los parámetros de $C = 1.0$ y $C = 5.0$ y a
 medida que aumenta el número de evaluaciones, la clasificación va mejorando (aunque debido a la convergencia entre las dos líneas podemos
 decir que, por más muestras de entrenamiento que tengamos, no va mejorar mucho mas) y el sobreajuste se reduce.
 
-\item En cuanto al SVM, podemos ver que las gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero los resultados a
+\item En cuanto al SVM, podemos ver que las gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero los
+resultados a
 los que se está llegando son los peores en comparación con el resto.
 
 \item En el Random Forest podemos ver que las curvas van aumentando suavemente a medida que el número de evaluaciones es más grande; y lo que es más importante, pueden seguir mejorando agregando más muestras de entrenamiento. Por otra parte, el valor del \textif{Training score} ronda siempre el 1, lo que puede causar sobreajuste.
 
-\item Las gráficas de los MLPClassifier son muy similares a las del Random Forest, con la única diferencia de que los valores del 
+\item Las gráficas de los MLPClassifier son muy similares a las del Random Forest, con la única diferencia de que los valores del
 \textif{Training score} son mucho más parecidos a los que obtenemos en el \textif{cross-validation}. Esto quiere decir que, a diferencia del anterior, será más complicado que los problemas de sobreajuste aparezcan.
 \end{itemize}
 Gracias a este análisis, podemos decir que el SVM no va a ser uno de nuestros mejores modelos, porque nos ha ofrecido los resultados más
@@ -648,9 +766,11 @@ Podemos ver que al principio, cuando tenemos pocos ejemplos de entrenamiento, la
 \textit{Cross-validation} es muy diferente (tenemos una varianza muy alta). Sin embargo, a medida que vamos aumentando la cantidad de
 ejemplos con los que entrenar, las líneas se empiezan a emparejar, ya que el modelo puede generalizar mucho mejor. La evolución de la curva
 \textit{Cross-validation} es ascendente y bastante suave, lo que significa que el modelo aún tiene margen de mejora en caso de disponer de
-más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste debido a que, pese a tener curva muy buena como acabamos de explicar, la precisión de entrenamiento (vale siempre 1.0) es ligeramente mayor que en la validación.
+más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste debido a que, pese a tener curva muy buena como acabamos de explicar, la precisión de entrenamiento (siempre vale 1.0) es ligeramente mayor que en la validación.
 
-CONCLUSION DEL MODELO O CONCLUSION GLOBAL?
+\section{\textsc{Conclusiones}}
+
+
 
 \newpage
 
