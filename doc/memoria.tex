@@ -170,6 +170,27 @@ continuación.
 
 \newpage
 
+\section{\textsc{Enfoque elegido para el análisis}}
+
+El análisis y la elección de los modelos para nuestro problema va a tener varias fases, las cuales vamos a detallar a continuación:
+\begin{itemize}[label=\textbullet]
+\item Lo primero será el \textbf{preprocesado y análisis de los datos}, en el cual partiremos leyendo los datos de los ficheros
+proporcionados y los manipularemos para obtener un conjunto de datos con el que trabajaremos más cómodamente. Posteriormente se realizará
+un estudio del conjunto de datos con la finalidad de conocer mejor el problema y cada uno de sus atributos y clases.
+\item Después elegiremos las \textbf{métricas a utilizar}, donde seleccionamos una serie de valores que nos permitan comparar los modelos.
+Con una buena métrica podremos ver cómo de bueno es el rendimiento que nos ofrecen.
+\item A continuación, seleccionaremos los \textbf{modelos a evaluar}, apartado en el que explicaremos cada una de las técnicas que
+utilizaremos para clasificar nuestros datos, cómo las hemos implementado y algunos detalles más específicos de cada una de ellas.
+\item Tras seleccionarlos, después tocará la \textbf{evaluación y comparación de los modelos}, donde los ejecutaremos, analizaremos los
+resultados obtenidos y, a partir de ellos, compararemos unos con otros. ¿El análisis incluye las funciones de pérdida utilizadas, curvas
+de aprendizaje, etc? (No se si dejarlo asi).
+\item Una vez hayamos analizado los modelos, tendremos que \textbf{elegir y ajustar los mejores modelos}, donde utilizaremos los resultados
+anteriores para seleccionar los que nos hayan funcionado mejor y luego ajustaremos sus hiperparámetros para intentar mejorarlos aun más.
+\item Por último, vamos a \textbf{evaluar el mejor modelo}, es decir, una vez ajustados los mejores y decido cuál es el que nos va a resultar
+más útil en nuestro problema, veremos como se enfrenta al conjunto de \textit{testing}. Analizaremos los resultados y concluiremos si
+hemos tomado una buena decisión al elegir ese modelo.
+\end{itemize}
+
 \section{\textsc{Preprocesado de los datos de entrada}}
 
 En esta sección vamos a comentar el preprocesado que hemos hecho a los datos de entrada. Es decir, vamos a ver cómo y por qué juntamos
@@ -305,8 +326,11 @@ De la figura anterior, podemos sacar algunas conclusiones:
     \item Tal y como nos indicaba la información del repositorio, existe un atributo que es constante, y que por tanto, no aporta
     ninguna información. Este atributo es el \textit{Region-pixel-count}, y se puede ver que en la figura no aparece ninguna
     información sobre éste. Por tanto, al ser un atributo ``inútil'', \textbf{va a ser eliminado}.
-    \item Existen algunas variables que están más correlacionadas con la salida que otras. Sin embargo, al estar en un problema
-    de clasificación, esta no es una información muy relevante, % TODO
+    \item Según lo que nos indica el gráfico, existen algunas variables que parecen tener una correlación mayor con la salida que
+    otras. Por ejemplo, el \textit{Region-centroid-row} tiene una correlación de 0.73, un valor bastante alto. Sin embargo, al estar
+    en un problema de clasificación, esta correlación no indica mucha información, ya que la salida es un valor discreto en vez de
+    uno continuo, y por tanto, que la variable crezca o decrezca no parece indicar mucho en cómo va a afectar a la salida, ya que ésta
+    es un valor discreto y no uno continuo.
     \item Existen una serie de variables de entrada que están bastante correlacionadas entre sí, ya que sus coeficientes de correlación de
     Pearson son 1, lo cuál significa que existe una correlación lineal entre ellas y que siempre que alguna de ellas crezca, la otra también
     lo hará. Esto nos podría indicar que podríamos eliminar algunos de estos atributos, ya que en un principio parecen aportar información
@@ -339,16 +363,55 @@ exactamente cuáles de ellos utilizaremos.
 \section{\textsc{Elección de las métricas a utilizar}}
 
 Está claro que, para comparar los distintos modelos y elegir a los mejores de entre ellos, necesitamos alguna métrica que nos permita
-ver cómo de buenos son sus rendimientos. Como estamos en un problema de clasificación, parece que la \textit{accuracy} es la mejor elección,
-ya que es una métrica que indica cuántos elementos ha predicho el modelo correctamente sobre el número total de elementos. Además de eso,
-la interpretación de esta métrica es muy sencilla e intuitiva, lo cuál no hace más que acentuar su idoneidad en este caso.
+ver cómo de buenos son sus rendimientos. Como estamos en un problema de clasificación, parece que la \textit{accuracy} es una buena
+elección, ya que es una métrica que indica cuántos elementos ha predicho el modelo correctamente sobre el número total de elementos. Además
+de eso, la interpretación de esta métrica es muy sencilla e intuitiva, lo cuál no hace más que acentuar su idoneidad en este caso. Y,
+aparte, es una muy buena métrica cuando el número de muestras que hay en cada clase está equilibrado, como es este caso, ya que los
+resultados obtenidos son más representativos. En caso de no estar equilibradas, por ejemplo, si el 90\% de las muestras fuesen de una clase
+y el 10\% fuese de otra, el clasificador podría tener una \textit{accuracy} de 90\%, pero podría estar clasificando correctamente solo
+elementos de la clase predominante.
 
-Con el modelo ya elegido, nos interesaría conocer algo más de información sobre su rendimiento. Sería interesante, por ejemplo, saber
-qué proporción de los
+Con el modelo ya elegido, nos interesaría conocer algo más de información sobre su rendimiento, aparte de la \textit{accuracy}. Sería
+interesante, por ejemplo, saber cómo clasifica con más detalle, viendo por ejemplo cuántos y qué elementos de cada clase clasifica
+correctamente y en cuántos y cuáles de ellos se equivoca y en qué clase los clasifica. Esto se puede obtener mediante la
+\textbf{matriz de confusión}. Esta matriz, además, nos permite obtener dos métricas más que tienen cierto interés.
+
+Una de ellas es el \textit{recall} o sensibilidad, métrica que nos indica la proporción de elementos que pertenecen a una clase han sido
+clasificados de forma correcta respecto al total de elementos que hay verdaderamente en esa clase. Esta métrica nos permite medir la
+capacidad que tiene el clasificador de \textit{encontrar todas las muestras positivas}\cite{bib:recall}. Es decir, si tenemos que $TP$
+(\textit{True Positives} o verdaderos positivos, a lo que se refiere con \textit{muestra positiva}) son los elementos de una clase
+clasificados correctamente, y $FN$ (\textit{False Negatives} o falsos negativos) los elementos de una clase que han sido clasificados como
+elementos de otra/s clases, tenemos que:
+
+\[ 
+\text{Recall} = \frac{TP}{TP + FN}
+\]
+
+La otra métrica es la \textit{precision} o precisión, la cuál nos indica qué proporción de elementos predichos de una clase se corresponden
+a la clase real respecto a la cantidad total de elementos predichos de esa misma clase. Esta métrica nos permite medir la capacidad que tiene
+el clasificador de \textit{no clasificar una muestra negativa como positiva}\cite{bib:precision}. Es decir, si tenemos que $TP$ son los
+elementos de una clase clasificados correctamente, y que los $FP$ (\textit{False Positives} o falsos positivos, a lo que se refiere con
+\textit{muestra negativa}) son los elementos que se han predicho que pertenecen a una determinada clase pero que en realidad pertenecen a
+otra pertenecen a otra, tenemos que:
+
+\[ 
+\text{Precision} = \frac{TP}{TP + FP}
+\]
+
+De estas dos métricas, nos interesa obtener valores medios, ya que estamos en un problema de clasificación en el que hay múltiples clases.
+Con lo cuál, nos interesa saber, de media, qué valores de \textit{recall} y \textit{precision} obtiene nuestro clasificador.
+
+\section{\textsc{Elección de los modelos a evaluar}}
+
+\section{\textsc{Funciones de pérdida utilizadas}}
+
+\section{\textsc{Proceso de evaluación de modelos}}
+
+\section{\textsc{Evaluación y comparación de modelos}}
 
 \newpage
 
-\section{\textsc{Elección de la mejor técnica}}
+\section{\textsc{Elección de los mejores modelos}}
 
 Una vez analizados todos los modelos, utilizando \textbf{cross-validation} y diversos hiperparámetros para cada uno de ellos, vamos a
 comentar cuáles han sido los que han obtenido los mejores resultados y porqué. Para ello nos vamos a ayudar de las métricas obtenidas
@@ -361,14 +424,20 @@ tenido, con un 97.8470\%; mientras que el que menor desviación típica ha conse
 entre el 96\% y el 97\%, y los valores de las desviaciones típicas también son bastante bastante bajos, entre el 0.005 y el 0.02; así que
 tendremos que tener en cuenta más cosas a parte de estas.
 
-Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algunos detalles más significativos en ellas. Si empezamos por
-las de Regresión Logística, vemos que las curvas son bastante suaves (sobretodo para los parámetros de $C = 1.0$ y $C = 5.0$) y a medida
-que aumenta el número de evaluaciones, la clasificación va mejorando y el sobreajuste se reduce. En cuanto al SVM, podemos ver que las
-gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero tampoco son las mejores. En el Random Forest podemos
-ver que las curvas van aumentando suavemente a medida que el número de evaluaciones es más grande, no obstante, (¿¿¿¿¿¿el valor del
-\textbf{Training score} ronda siempre el 1, lo que puede causar sobreajuste. Aún así, no podemos decir que sean malas?????). Finalmente,
-para las gráficas del MLPClassifier .....
+Vamos a analizar ahora las gráficas de los modelos para ver si encontramos algunos detalles más significativos en ellas:
+\begin{itemize}[label=\textbullet]
+\item Si empezamos por las de Regresión Logística, vemos que las curvas son bastante suaves  para los parámetros de $C = 1.0$ y $C = 5.0$ y a
+medida que aumenta el número de evaluaciones, la clasificación va mejorando (aunque debido a la convergencia entre las dos líneas podemos
+decir que, por más muestras de entrenamiento que tengamos, no va mejorar mucho mas) y el sobreajuste se reduce.
 
+\item En cuanto al SVM, podemos ver que las gráficas no son malas, es decir, son bastante suaves y apenas tienen sobreajuste, pero los resultados a
+los que se está llegando son los peores en comparación con el resto.
+
+\item En el Random Forest podemos ver que las curvas van aumentando suavemente a medida que el número de evaluaciones es más grande; y lo que es más importante, pueden seguir mejorando agregando más muestras de entrenamiento. Por otra parte, el valor del \textif{Training score} ronda siempre el 1, lo que puede causar sobreajuste.
+
+\item Las gráficas de los MLPClassifier son muy similares a las del Random Forest, con la única diferencia de que los valores del 
+\textif{Training score} son mucho más parecidos a los que obtenemos en el \textif{cross-validation}. Esto quiere decir que, a diferencia del anterior, será más complicado que los problemas de sobreajuste aparezcan.
+\end{itemize}
 Gracias a este análisis, podemos decir que el SVM no va a ser uno de nuestros mejores modelos, porque nos ha ofrecido los resultados más
 pobres en cuanto a la precisión y la desviación típica, y sus gráficas tampoco eran las mejores. Aun así, este no es un mal clasificador
 (hemos podido comprobar que su porcentaje de acierto suele ser mayor de 90), pero lo tenemos que descartar porque tenemos al resto que
@@ -503,7 +572,7 @@ asignados en un principio, así que partiremos de estos para realizar la evaluac
 
 \section{\textsc{Evaluación del mejor modelo}}
 
-Vamos a realizar la evaluación final del modelo elegido. Para ello nos ayudaremos de un modelo de referencia llamado \textbf{\textit{DummyClassifier}}\cite{DummyClassifier}, un modelo que utiliza reglas simples y que está especialmente diseñado para ser comparado con otras técnicas reales de clasificación (no se utiliza para problemas reales). El código para generar este clasificador es el siguiente:
+Una vez elegido el modelo y ajustados los parámetros, vamos a realizar la evaluación final. Para ello nos ayudaremos de dos cosas: la primera es el \textbf{\textit{testing}} que no habíamos reservado al principio; y lo segundo es un modelo de referencia llamado \textbf{\textit{DummyClassifier}}\cite{DummyClassifier}, un modelo que utiliza reglas simples y que está especialmente diseñado para ser comparado con otras técnicas reales de clasificación (no se utiliza para problemas reales). El código para generar este clasificador es el siguiente:
 
 \begin{lstlisting}
 # Creamos modelo de prueba y lo entrenamos
@@ -547,9 +616,9 @@ Los parámetros que les pasamos son las etiquetas que esperamos obtener, las eti
 
 A simple vista nos damos cuenta de que un modelo aleatorio como el Dummy no es capaz de clasificar este problema correctamente. Podemos ver que ha obtenido unos resultados muy malos (simplemente con observar el $13\%$ aproximado para los tres parámetros a estudiar, ya nos dice que este problema tiene una complejidad a la hora de clasificar).
 
-En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos). Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
+En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos), y por tanto, comete un $1.3\% de error$. Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados cuando lo evaluamos en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
 
-Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que los parámetros obtenidos anteriores son correctos:
+Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que parámetros obtenidos son correctos y dónde se han cometido los fallos:
 
 \begin{figure}[H]
     \centering
@@ -558,7 +627,30 @@ Vamos a profundizar más en el análisis de este modelo sacando la matriz de con
     \label{fig:confusion-matrix}
 \end{figure}
 
-Antes de analizarla, vamos a explicar que significa y que representa cada uno de sus valores. La matriz de confusión nos permite ver más detalladamente el rendimiento de un algoritmo a través de sus dos dimensiones, una con los valores reales y la otra con los que hemos predicho. En el ejemplo 
+Antes de analizarla, vamos a explicar que significa y que representa cada uno de sus valores. La matriz de confusión nos permite ver más detalladamente el rendimiento de un algoritmo a través de sus dos ejes. El horizontal que representa el número de predicciones para cada una de las clases; y el vertical, que representa los valores reales de las clases.
+
+Si hubiésemos obtenido la matriz diagonal, el modelo tendría una precisión del $100\%$. En nuestro caso vemos que ha estado muy cerca de conseguirlo, ya que únicamente ha fallado en 6 de los 462 casos totales. Donde más ha fallado ha sido al clasificar las ventanas (\textit{WINDOW}), en la cuales ha puesto que 2 son ladrillos (\textit{BRICKFACE}) y una como cemento (\textit{CEMENT}). Esto quizás se deba a que la ventana esté situada en una pared de ladrillos u hormigón y el clasificador, al ver los parámetros de esta, lo haya entendido como tal. También encontramos un error al clasificar una tipo follaje (\textit{FOLIAGE}) como hierba (\textit{GRASS}), otro al clasificar una ventana (\textit{WINDOW}) como follaje (\textit{FOLIAGE}) y un último error al clasificar hierba (\textit{GRASS}) como cemento (\textit{CEMENT}).
+
+Estos errores probablemente también se deban a la misma razón comentada anteriormente. Decimos esto porque, teniendo en cuenta que no hemos reducido dimensionalidad y tampoco hemos normalizado los datos (simplemente hemos eliminado una variable constante), el 'fallo' esté determinado por la propia imagen. Con esto nos referimos a que es un problema de la vida real, y los datos pueden contener ruido provocado, o bien, porque la imagen no sea lo suficientemente representativa, o porque simplemente necesitemos más atributos que nos permitan distinguir mejor entre clases.
+
+Pese a comentar estos errores uno a uno no quiere decir que el modelo sea malo. Todo lo contrario, que hayamos podido enumerar los errores entre 462 datos nos da una idea de lo bien que ha clasificado y de los pocos errores que ha cometido.
+
+Otra métrica que vamos a analizar sobre este modelo va a ser su \textit{curva de aprendizaje}. Vamos a ver primero la gráfica y posteriormente pasaremos a comentarla:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.75]{img/lc-rf.png}
+    \caption{Curva de aprendizaje de nuestro modelo ajustado.}
+    \label{fig:lc-rf}
+\end{figure}
+
+Podemos ver que al principio, cuando tenemos pocos ejemplos de entrenamiento, la precisión entre los datos del \textit{Training} y del
+\textit{Cross-validation} es muy diferente (tenemos una varianza muy alta). Sin embargo, a medida que vamos aumentando la cantidad de
+ejemplos con los que entrenar, las líneas se empiezan a emparejar, ya que el modelo puede generalizar mucho mejor. La evolución de la curva
+\textit{Cross-validation} es ascendente y bastante suave, lo que significa que el modelo aún tiene margen de mejora en caso de disponer de
+más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste debido a que, pese a tener curva muy buena como acabamos de explicar, la precisión de entrenamiento (vale siempre 1.0) es ligeramente mayor que en la validación.
+
+CONCLUSION DEL MODELO O CONCLUSION GLOBAL?
 
 \newpage
 
@@ -594,16 +686,24 @@ Scikit-Learn. \textit{PCA}
 \\\url{https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html}
 
 \bibitem{learning_curve}
-Scikit-Learn \textit{plot\_learning\_curve}
+Scikit-Learn. \textit{plot\_learning\_curve}
 \\\url{https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html#sphx-glr-auto-examples-model-selection-plot-learning-curve-py}
 
 \bibitem{GridSearchCV}
-Scikit-Learn \textit{GridSearchCV}
+Scikit-Learn. \textit{GridSearchCV}
 \\\url{https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html}
 
 \bibitem{DummyClassifier}
 Scikit-Learn \textit{DummyClassifier}
 \\\url{https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier.html}
+
+\bibitem{bib:recall}
+Scikit-Learn. \textit{recall\_score}
+\\\url{https://scikit-learn.org/stable/modules/generated/sklearn.metrics.recall_score.html}
+
+\bibitem{bib:precision}
+Scikit-Learn. \textit{precision\_score}
+\\\url{https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_score.html}
 
 \end{thebibliography}
 
