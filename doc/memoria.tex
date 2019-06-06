@@ -520,10 +520,181 @@ Para evaluar los distintos modelos, ya que queremos dejar el conjunto de test pa
 muestra, podemos utilizar el conjunto de entrenamiento, y con él hacer un \textbf{10-fold cross-validation}. Es decir, podemos dividir
 la muestra que tenemos en 10 particiones disjuntas del mismo tamaño o casi iguales (dependiendo de la cantidad de elementos de los que
 dispongamos). Además, como estamos en un problema de clasificación, nos interesa que esos conjuntos disjuntos contengan un número proporcional
-de elementos de cada clase respecto a la proporción de elementos totales de cada clase que había en el conjunto original, de forma que
-los distintos conjuntos no estén desequilibrados en cuanto a elementos de una clase y para poder conservar esa proporcionalidad.
+de elementos de cada clase respecto al número de elementos totales de cada clase que hay en el conjunto de entrenamiento original. De esta forma,
+cada partición será una buena representación del conjunto de entrenamiento, y así, se evita que por ejemplo haya conjuntos que solo tengan
+muestras de solo una clase, lo cuál podría producir resultados muy malos si el modelo nunca ha visto un ejemplo de ese tipo.
+
+El motivo de escoger \textbf{cross-validation}
 
 \section{\textsc{Evaluación y comparación de modelos}}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{img/eval-results.png}
+    \caption{Resultado de la evaluación de los modelos.}
+    \label{fig:eval-results}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-lr-c-01.png}
+    \caption{Curva de aprendizaje del modelo de Regresión Logística con C=0.1.}
+    \label{fig:lc-lr-c-01}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-lr-c-1.png}
+    \caption{Curva de aprendizaje del modelo de Regresión Logística con C=1.0.}
+    \label{fig:lc-lr-c-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-lr-c-5.png}
+    \caption{Curva de aprendizaje del modelo de Regresión Logística con C=5.0.}
+    \label{fig:lc-lr-c-5}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-svm-c-01.png}
+    \caption{Curva de aprendizaje del modelo SVM con C=0.1.}
+    \label{fig:lc-svm-c-01}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-svm-c-1.png}
+    \caption{Curva de aprendizaje del modelo SVM con C=1.0.}
+    \label{fig:lc-svm-c-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-svm-c-5.png}
+    \caption{Curva de aprendizaje del modelo SVM con C=5.0.}
+    \label{fig:lc-svm-c-5}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-10.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=10$.}
+    \label{fig:lc-rf-n-10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-25.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=25$.}
+    \label{fig:lc-rf-n-25}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-50.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=50$.}
+    \label{fig:lc-rf-n-50}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-100.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=100$.}
+    \label{fig:lc-rf-n-100}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-10-d-9.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=10$ y $max_depth=9$.}
+    \label{fig:lc-rf-n-10-d-9}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-25-d-9.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=25$ y $max_depth=9$.}
+    \label{fig:lc-rf-n-25-d-9}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-50-d-9.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=50$ y $max_depth=9$.}
+    \label{fig:lc-rf-n-50-d-9}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-rf-n-100-d-9.png}
+    \caption{Curva de aprendizaje del modelo Random Forest con $n\_estimators=100$ y $max_depth=9$.}
+    \label{fig:lc-rf-n-100-d-9}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-10.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=10$.}
+    \label{fig:lc-nn-10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-38.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=38$.}
+    \label{fig:lc-nn-38}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-100.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=100$.}
+    \label{fig:lc-nn-100}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-10-10.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=10-10$.}
+    \label{fig:lc-nn-10-10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-38-38.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=38-38$.}
+    \label{fig:lc-nn-38-38}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-100-100.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=100-100$.}
+    \label{fig:lc-nn-100-100}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-10-10-10.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=10-10-10$.}
+    \label{fig:lc-nn-10-10-10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-38-38-38.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=38-38-38$.}
+    \label{fig:lc-nn-38-38-38}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{img/lc-nn-100-100-100.png}
+    \caption{Curva de aprendizaje del modelo de Neural Network con $hidden_layer_sizes=100-100-100$.}
+    \label{fig:lc-nn-100-100-100}
+\end{figure}
 
 \newpage
 
@@ -734,7 +905,7 @@ Los parámetros que les pasamos son las etiquetas que esperamos obtener, las eti
 
 A simple vista nos damos cuenta de que un modelo aleatorio como el Dummy no es capaz de clasificar este problema correctamente. Podemos ver que ha obtenido unos resultados muy malos (simplemente con observar el $13\%$ aproximado para los tres parámetros a estudiar, ya nos dice que este problema tiene una complejidad a la hora de clasificar).
 
-En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos), y por tanto, comete un $1.3\% de error$. Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados cuando lo evaluamos en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
+En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos), y por tanto, comete un \textbf{$1.3\%$ de error}. Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados cuando lo evaluamos en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
 
 Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que parámetros obtenidos son correctos y dónde se han cometido los fallos:
 
@@ -770,7 +941,19 @@ más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste 
 
 \section{\textsc{Conclusiones}}
 
+El objetivo de este trabajo era el de evaluar distintas técnicas para clasificar unas imágenes, extraídas del UCI Machine Learning Repository, según el tipo de material que veamos en ellas. Para realizar esta clasificación hemos dado los siguientes pasos.
 
+Primero hemos analizado y modificado los datos, unificando los dos ficheros proporcionados, realizando nuestra propia división en \textit{training} y \textit{test}. Nos hemos dado cuenta de que no nos falta ningún valor en el conjunto y que nos sobra un atributo, que era constante para todos los datos. No hemos eliminado las correlacionadas para evitar eliminar información útil.
+
+Hemos analizado todos los modelos, comentando cómo funcionan, sus funciones de pérdida, si utilizan regularización y cuál, y algunos detalles más específicos de cada uno. La evaluación de cada una de las técnicas la hemos realizado mediante las métricas \textit{accuracy}, \textit{recall} y \textit{precision}, y la técnica de validación cruzada a la hora de entrenar. Gracias a esto conseguimos un modelo que se ajuste de una forma generalizada a la naturaleza del conjunto de datos.
+
+Cuando los hemos evaluado y comparado, nos hemos dado cuenta de que....
+
+Las técnicas que hemos seleccionado como las mejores han sido \textbf{Regresión Logística} y \textbf{Random Forest}. La primera porque, con unos hiperparámetros prefijados por nosotros obtuvimos muy buenos resultados y no es una técnica tan compleja como las Redes Neuronales. Las Redes Neuronales obtuvieron mejor resultado, pero con una diferencia no lo suficientemente significativa como para compensar su complejidad. En cuanto al Random Forest, obtuvimos los mejores resultados sin apenas ajustar los modelos (únicamente probamos a limitar la profundidad a 9). Sus curvas de aprendizaje no eran las mejores, sin embargo, no es un modelo tan complejo como el anterior, así que merecía la pena intentar ajustarlo mejor.
+
+Posteriormente, hemos ajustado estas dos técnicas mencionadas anteriormente. En Regresión Logística, hemos conseguido un mejor ajuste del parámetro C (con un valor de 0.5), que evita una fuerte regularización o que aparezca el sobreajuste. No obstante, en términos de precisión y desviación típica no ha mejorado al modelo inicial (95.5\% y 0.012 respectivamente), por lo que no lo seleccionaremos como el mejor. En cuanto al Random Forest, hemos conseguido ajustar un valor de profundidad $max_depth = 15$ pese a que el número de árboles que ha elegido es mayor al que asignamos inicialmente $n_estimators = 400$. Los valores de precisión y desviación típica son similares al modelo inicial (97.9\% y 0.010 respectivamente), aunque hay que tener en cuenta que los iniciales se obtuvieron sin una profundidad determinada.
+
+Por último, hemos pasado a evaluar el mejor modelo (este último Random Forest que hemos comentado) a través del conjunto de test reservado al principio y un DummyClassifier. Gracias a esta evaluación y al posterior análisis, pudimos comprobar que, tanto la técnica elegida como el ajuste de sus hiperparámetros, lo hicimos bastante bien. Entre las 462 muestras sólo obtuvimos 6 errores. No podemos confirmar que esta sea la mejor técnica, pero gracias a todo este análisis, es bastante apropiado para resolver nuestro problema.
 
 \newpage
 
