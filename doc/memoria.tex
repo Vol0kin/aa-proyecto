@@ -468,7 +468,8 @@ E_{SVM}(b, \mathbf{w}) = \frac{1}{N} \sum_{n=1}^N \max(1 - y_n \mathbf{w}^T\math
 \end{equation}
 
 \noindent la cuál no puede ser minimizada directamente al no ser derivable, si no que debe ser transformada y se debe resolver en el problema
-dual.
+dual. Se ha escogido esta función de pérdida debido a que es la que nos permite maximizar el margen que se deja a cada lado de la separación
+entre las clases.
 
 En cuanto a la regularización, hay dos parámetros que influyen que se han comentado anteriormente, que son $\gamma$ y $C$. Por tanto, se
 intentará controlar el parámetro $C$ a la hora de evaluar el modelo para hacer que no se obtenga un modelo muy ajustado a los puntos, y por
@@ -505,7 +506,9 @@ la cantidad de datos de entrenamiento de la que disponemos después de crear nue
 de que la arquitectura de la red no será muy compleja, en general.
 
 La función de pérdida que utiliza este modelo es la misma que en la Regresión Logística Multinomial. Es decir, utiliza la \textbf{Multi-class
-Cross Entropy}, la expresión de la cuál se puede ver en \eqref{eq:mult-cross-entropy}.
+Cross Entropy}, la expresión de la cuál se puede ver en \eqref{eq:mult-cross-entropy}. Se ha escogido esta función debido a que estamos
+en un problema de clasificación con múltiples clases, con lo cuál, tal y como comentamos anteriormente, es una función de pérdida muy utilizada
+en este tipo de casos y que ofrece unos resultados muy buenos.
 
 Aunque existan diversas técnicas de regularización como por ejemplo el \textit{early stopping}, hemos decidido no utilizar ningún tipo de
 regularización a sabiendas de que existe cierto riesgo a que se produzca sobreajuste. Sin embargo, queremos ver su comportamiento sin
@@ -520,11 +523,67 @@ Para evaluar los distintos modelos, ya que queremos dejar el conjunto de test pa
 muestra, podemos utilizar el conjunto de entrenamiento, y con él hacer un \textbf{10-fold cross-validation}. Es decir, podemos dividir
 la muestra que tenemos en 10 particiones disjuntas del mismo tamaño o casi iguales (dependiendo de la cantidad de elementos de los que
 dispongamos). Además, como estamos en un problema de clasificación, nos interesa que esos conjuntos disjuntos contengan un número proporcional
-de elementos de cada clase respecto al número de elementos totales de cada clase que hay en el conjunto de entrenamiento original. De esta forma,
-cada partición será una buena representación del conjunto de entrenamiento, y así, se evita que por ejemplo haya conjuntos que solo tengan
-muestras de solo una clase, lo cuál podría producir resultados muy malos si el modelo nunca ha visto un ejemplo de ese tipo.
+de elementos de cada clase respecto al número de elementos totales de cada clase que hay en el conjunto de entrenamiento original. De esta
+forma, cada partición será una buena representación del conjunto de entrenamiento, y así, se evita que por ejemplo haya conjuntos que solo
+tengan muestras de solo una clase, lo cuál podría producir resultados muy malos si el modelo nunca ha visto un ejemplo de ese tipo.
 
-El motivo de escoger \textbf{cross-validation}
+El proceso que se seguirá es, una vez dividida la muestra en las 10 particiones disjuntas, se entrenará el modelo con 9 de ellas y
+usar la restante para validar el modelo, obteniendo una métrica de rendimiento, como en este caso es el \textit{accuracy} del modelo.
+Este proceso se repetirá 10 veces, cambiando cada vez la muestra con la que se está validando por alguna de las otras que no se han utilizado.
+Después, se calculará un valor medio con los resultados obtenidos, lo cuál, sabiendo que el error obtenido en la partición de validación
+es un buen estimador del error fuera de la muestra, nos permitiría ver como se comporta, de media, cada uno de los modelos cada vez que le
+llegan datos nuevos. Una desventaja de esto es que, al hacer \textbf{cross-validation} estamos perdiendo una parte de los datos que podríamos
+utilizar para entrenar nuestro modelo con el objetivo de conseguir mejores resultados. Sin embargo, al tener una parte de los datos para
+validar los modelos, tenemos una forma de ver cómo se comportan los modelos. La partición de test solamente será utilizada una vez que tengamos
+el modelo definitivo, no antes.
+
+Para poder comparar los modelos mejor, es importante saber que la escala de los datos puede llegar a influir en los modelos. Por ejemplo,
+las Redes Neuronales se pueden beneficiar de la normalización de los datos, ya que esto puede acelerar los procesos de aprendizaje
+\cite{bib:normalize}. Otro ejemplo son las SVM, las cuáles se benefician de normalizar los datos de entrada, ya que este proceso hace
+que no haya ninguna dimensión que, debido a su escala, domine sobre otras dimensiones de menor escala, haciendo que éstas sean menos importantes.
+Hay otros modelos, sin embargo, como Ranfom Forest y Regresión Logística Multinomial que no se ven muy influidos por la escala de los datos.
+
+Por tanto, para poder comparar nuestros modelos de forma más justa, cuando evaluemos las Redes Neuronales y el SVM con \textit{kernel} RBF, vamos
+a normalizar, solo en esos casos, los datos con los que vamos a entrenar los modelos. Al estar haciendo \textbf{cross-validation} y teniendo
+modelos que no necesitan de normalizado de datos, no podemos aplicarlo sobre todo el conjunto de entrenamiento directamente, si no que, lo que
+tendremos que hacer es que, para cada uno de los \textit{folds}, normalizar los datos que serán utilizados en el del modelo, entrenar el modelo
+con dichos datos y posteriormente normalizar los datos que se utilizan para validar y predecir con ellos, obteniendo por tanto una métrica.
+La normalización que nos interesa hacer es restar a cada uno de los atributos sus valores medios (después de haber obtenido el valor medio de
+cada atributo) y dividirlos entre la desviación típica de ese atributo, haciendo que los atributos tengan una media $\mu = 0$ y una desviación
+típica $\sigma = 1$.
+
+Ahora que ya hemos dicho cómo queremos realizar la evaluación, nos interesaría saber que hiperparámetros vamos a utilizar con cada modelo a la
+hora de evaluarlos. Vamos a ver para cada modelo qué configuraciones utilizaremos, refiriéndonos a los hiperparámetros según los nombres que
+tengan en \textbf{scikit-learn}, además de decir qué valores tendrán:
+
+\begin{itemize}[label=\textbullet]
+    \item En la Regresión Logística Multinomial, vamos a utilizar diversos valores de $C$ (este hiperparámetro se corresponde con el $\lambda$ de
+    la regularización), como por ejemplo 0.1, 1 y 5, poniendo una regularización más floja y una más intensa. El modelo que nos proporciona
+    \textbf{scikit-learn} es el $LogisticRegression$. Sin embargo, para hacer que sea multinomial, tenemos que establecer algunos parámetros
+    extra para que sea capaz de funcionar de esta forma.
+    \item En SVM con \textit{kernel} lineal existen dos hiperparámetros que se podrían probar, que son $C$, que se corresponde con la importancia
+    que se le da a la violación del margen y que además controla la amplitud de éste, y $gamma$, que se corresponde con la influencia que tiene cada
+    punto de la muestra. Debido a que es difícil intentar ajustar ambos parámetros a mano, vamos a dejar que $gamma$ se ajuste automáticamente al
+    número de características que tengan los datos, mientras que daremos a $C$ los valores 0.1, 1 y 5 para que pruebe a dejar, tanto una mayor
+    cantidad de margen con un $C$ pequeño, como un margen más pequeño con un valor de $C$ alto. El modelo que nos proporciona \textbf{scikit-learn}
+    es el $SVC$.
+    \item Para el Random Forest, nos interesa ajustar el número de árboles, el cuál viene definido por el parámetro $n\_estimators$. Además,
+    nos interesaría poner alguna profundidad límite, la cuál viene por el parámetro $max\_depth$. Probaremos primero a establecer los números
+    de árboles a 10, 25, 50 y 100 sin ninguna profundidad, y después probaremos el mismo número de árboles con profundidad 9. Hemos escogido
+    esta profundidad ya que creemos que puede ofrecer unos resultados relativamente buenos, simplificando los árboles creados bastante y haciendo
+    que sean menos propensos al sobreajuste. El modelo que nos proporciona \textbf{scikit-learn}, y el que usaremos, es el $RandomForestClassifier$.
+    \item Finalmente, en las Redes Neuronales nos interesa probar diversas arquitecturas con una serie de capas ocultas y unidades por capa.
+    Este hiperparámetro se representa como $hidden\_layer\_sizes$, y queremos probar arquitecturas de 1, 2 y 3 capas ocultas con 10, 38 y
+    100 niveles por capa, para ver cuál de ellas ofrece unos mejores resultados. El modelo que nos proporciona \textbf{scikit-learn} en este
+    caso es el $MLPClassifier$.
+\end{itemize}
+
+Para facilitar todo el proceso, vamos a utilizar los \textit{pipelines} \cite{bib:pipeline} que nos proporciona \textbf{scikit-learn}. Con ellos
+podremos crear flujos que nos permiten encadenar una serie de operaciones, como por ejemplo escalar los datos y posteriormente ajustar un modelo.
+Esto nos será muy útil, ya que para evaluar los modelos, al utilizar \textbf{cross-validation} podemos hacer que para cada fold se hagan las
+transformaciones necesarias en los datos de entrenamiento y posteriormente en los de validación.
+
+Y dicho esto, podemos pasar por fin a evaluar los modelos y a compararlos.
 
 \section{\textsc{Evaluación y comparación de modelos}}
 
@@ -894,7 +953,9 @@ rf_precision = precision_score(y_test, y_predicted_rf,
                                average='macro')
 \end{lstlisting}
 
-Los parámetros que les pasamos son las etiquetas que esperamos obtener, las etiquetas que ha predicho cada uno de los modelos y, con $average$, el tipo de medias que obtendremos. En nuestro caso, con el valor $'macro'$, obtendremos la media estándar sin ponderar. Los resultados ha sido los siguientes:
+Los parámetros que les pasamos son las etiquetas que esperamos obtener, las etiquetas que ha predicho cada uno de los modelos y, con
+$average$, el tipo de medias que obtendremos. En nuestro caso, con el valor $'macro'$, obtendremos la media estándar sin ponderar. Los
+resultados ha sido los siguientes:
 
 \begin{figure}[H]
     \centering
@@ -903,11 +964,19 @@ Los parámetros que les pasamos son las etiquetas que esperamos obtener, las eti
     \label{fig:model-comp-scores}
 \end{figure}
 
-A simple vista nos damos cuenta de que un modelo aleatorio como el Dummy no es capaz de clasificar este problema correctamente. Podemos ver que ha obtenido unos resultados muy malos (simplemente con observar el $13\%$ aproximado para los tres parámetros a estudiar, ya nos dice que este problema tiene una complejidad a la hora de clasificar).
+A simple vista nos damos cuenta de que un modelo aleatorio como el Dummy no es capaz de clasificar este problema correctamente. Podemos
+ver que ha obtenido unos resultados muy malos (simplemente con observar el $13\%$ aproximado para los tres parámetros a estudiar, ya nos
+dice que este problema tiene una complejidad a la hora de clasificar).
 
-En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un $98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en \textit{precision} (verdaderos positivos entre todo el conjunto de positivos), y por tanto, comete un \textbf{$1.3\%$ de error}. Estos valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados cuando lo evaluamos en su momento fueron peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
+En cuanto a los resultados que ha obtenido el Random Forest, no tienen nada que ver con los del Dummy. Las predicciones han llegado a un
+$98.701\%$ tanto en \textit{accuracy}, como en \textit{recall} (es decir, la tasa de aciertos o tasa de verdaderos positivos), y como en
+\textit{precision} (verdaderos positivos entre todo el conjunto de positivos), y por tanto, comete un \textbf{$1.3\%$ de error}. Estos
+valores son mejores que los que obtuvimos anteriormente, al ajustar el modelo con \textit{cross-validation}. Esto es muy importante, ya
+que estamos comprobando que el ajuste lo hemos realizado correctamente y, pese que los resultados cuando lo evaluamos en su momento fueron
+peores, con un test más grande comprobamos que los hiperparámetros fueron elegidos correctamente.
 
-Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que parámetros obtenidos son correctos y dónde se han cometido los fallos:
+Vamos a profundizar más en el análisis de este modelo sacando la matriz de confusión, para comprobar que parámetros obtenidos son
+correctos y dónde se han cometido los fallos:
 
 \begin{figure}[H]
     \centering
@@ -916,15 +985,29 @@ Vamos a profundizar más en el análisis de este modelo sacando la matriz de con
     \label{fig:confusion-matrix}
 \end{figure}
 
-Antes de analizarla, vamos a explicar que significa y que representa cada uno de sus valores. La matriz de confusión nos permite ver más detalladamente el rendimiento de un algoritmo a través de sus dos ejes. El horizontal que representa el número de predicciones para cada una de las clases; y el vertical, que representa los valores reales de las clases.
+Antes de analizarla, vamos a explicar que significa y que representa cada uno de sus valores. La matriz de confusión nos permite ver más
+detalladamente el rendimiento de un algoritmo a través de sus dos ejes. El horizontal que representa el número de predicciones para cada
+una de las clases; y el vertical, que representa los valores reales de las clases.
 
-Si hubiésemos obtenido la matriz diagonal, el modelo tendría una precisión del $100\%$. En nuestro caso vemos que ha estado muy cerca de conseguirlo, ya que únicamente ha fallado en 6 de los 462 casos totales. Donde más ha fallado ha sido al clasificar las ventanas (\textit{WINDOW}), en la cuales ha puesto que 2 son ladrillos (\textit{BRICKFACE}) y una como cemento (\textit{CEMENT}). Esto quizás se deba a que la ventana esté situada en una pared de ladrillos u hormigón y el clasificador, al ver los parámetros de esta, lo haya entendido como tal. También encontramos un error al clasificar una tipo follaje (\textit{FOLIAGE}) como hierba (\textit{GRASS}), otro al clasificar una ventana (\textit{WINDOW}) como follaje (\textit{FOLIAGE}) y un último error al clasificar hierba (\textit{GRASS}) como cemento (\textit{CEMENT}).
+Si hubiésemos obtenido la matriz diagonal, el modelo tendría una precisión del $100\%$. En nuestro caso vemos que ha estado muy cerca de
+conseguirlo, ya que únicamente ha fallado en 6 de los 462 casos totales. Donde más ha fallado ha sido al clasificar las ventanas
+(\textit{WINDOW}), en la cuales ha puesto que 2 son ladrillos (\textit{BRICKFACE}) y una como cemento (\textit{CEMENT}). Esto quizás se
+deba a que la ventana esté situada en una pared de ladrillos u hormigón y el clasificador, al ver los parámetros de esta, lo haya
+entendido como tal. También encontramos un error al clasificar una tipo follaje (\textit{FOLIAGE}) como hierba (\textit{GRASS}), otro al
+clasificar una ventana (\textit{WINDOW}) como follaje (\textit{FOLIAGE}) y un último error al clasificar hierba (\textit{GRASS}) como
+cemento (\textit{CEMENT}).
 
-Estos errores probablemente también se deban a la misma razón comentada anteriormente. Decimos esto porque, teniendo en cuenta que no hemos reducido dimensionalidad y tampoco hemos normalizado los datos (simplemente hemos eliminado una variable constante), el 'fallo' esté determinado por la propia imagen. Con esto nos referimos a que es un problema de la vida real, y los datos pueden contener ruido provocado, o bien, porque la imagen no sea lo suficientemente representativa, o porque simplemente necesitemos más atributos que nos permitan distinguir mejor entre clases.
+Estos errores probablemente también se deban a la misma razón comentada anteriormente. Decimos esto porque, teniendo en cuenta que no
+hemos reducido dimensionalidad y tampoco le hemos aplicado PCA a los datos (simplemente hemos eliminado una variable constante), el 'fallo' esté
+determinado por la propia imagen. Con esto nos referimos a que es un problema de la vida real, y los datos pueden contener ruido
+provocado, o bien, porque la imagen no sea lo suficientemente representativa, o porque simplemente necesitemos más atributos que nos
+permitan distinguir mejor entre clases.
 
-Pese a comentar estos errores uno a uno no quiere decir que el modelo sea malo. Todo lo contrario, que hayamos podido enumerar los errores entre 462 datos nos da una idea de lo bien que ha clasificado y de los pocos errores que ha cometido.
+Pese a comentar estos errores uno a uno no quiere decir que el modelo sea malo. Todo lo contrario, que hayamos podido enumerar los errores
+entre 462 datos nos da una idea de lo bien que ha clasificado y de los pocos errores que ha cometido.
 
-Otra métrica que vamos a analizar sobre este modelo va a ser su \textit{curva de aprendizaje}. Vamos a ver primero la gráfica y posteriormente pasaremos a comentarla:
+Otra métrica que vamos a analizar sobre este modelo va a ser su \textit{curva de aprendizaje}. Vamos a ver primero la gráfica y
+posteriormente pasaremos a comentarla:
 
 \begin{figure}[H]
     \centering
@@ -937,23 +1020,44 @@ Podemos ver que al principio, cuando tenemos pocos ejemplos de entrenamiento, la
 \textit{Cross-validation} es muy diferente (tenemos una varianza muy alta). Sin embargo, a medida que vamos aumentando la cantidad de
 ejemplos con los que entrenar, las líneas se empiezan a emparejar, ya que el modelo puede generalizar mucho mejor. La evolución de la curva
 \textit{Cross-validation} es ascendente y bastante suave, lo que significa que el modelo aún tiene margen de mejora en caso de disponer de
-más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste debido a que, pese a tener curva muy buena como acabamos de explicar, la precisión de entrenamiento (siempre vale 1.0) es ligeramente mayor que en la validación.
+más ejemplos de entrenamiento. El único inconveniente está en el sobreajuste debido a que, pese a tener curva muy buena como acabamos de
+explicar, la precisión de entrenamiento (siempre vale 1.0) es ligeramente mayor que en la validación.
 
 \section{\textsc{Conclusiones}}
 
-El objetivo de este trabajo era el de evaluar distintas técnicas para clasificar unas imágenes, extraídas del UCI Machine Learning Repository, según el tipo de material que veamos en ellas. Para realizar esta clasificación hemos dado los siguientes pasos.
+El objetivo de este trabajo era el de evaluar distintas técnicas para clasificar unas imágenes, extraídas del UCI Machine Learning
+Repository, según el tipo de material que veamos en ellas. Para realizar esta clasificación hemos dado los siguientes pasos.
 
-Primero hemos analizado y modificado los datos, unificando los dos ficheros proporcionados, realizando nuestra propia división en \textit{training} y \textit{test}. Nos hemos dado cuenta de que no nos falta ningún valor en el conjunto y que nos sobra un atributo, que era constante para todos los datos. No hemos eliminado las correlacionadas para evitar eliminar información útil.
+Primero hemos analizado y modificado los datos, unificando los dos ficheros proporcionados, realizando nuestra propia división en
+\textit{training} y \textit{test}. Nos hemos dado cuenta de que no nos falta ningún valor en el conjunto y que nos sobra un atributo, que
+era constante para todos los datos. No hemos eliminado las correlacionadas para evitar eliminar información útil.
 
-Hemos analizado todos los modelos, comentando cómo funcionan, sus funciones de pérdida, si utilizan regularización y cuál, y algunos detalles más específicos de cada uno. La evaluación de cada una de las técnicas la hemos realizado mediante las métricas \textit{accuracy}, \textit{recall} y \textit{precision}, y la técnica de validación cruzada a la hora de entrenar. Gracias a esto conseguimos un modelo que se ajuste de una forma generalizada a la naturaleza del conjunto de datos.
+Hemos analizado todos los modelos, comentando cómo funcionan, sus funciones de pérdida, si utilizan regularización y cuál, y algunos
+detalles más específicos de cada uno. La evaluación de cada una de las técnicas la hemos realizado mediante las métricas
+\textit{accuracy}, \textit{recall} y \textit{precision}, y la técnica de validación cruzada a la hora de entrenar. Gracias a esto
+conseguimos un modelo que se ajuste de una forma generalizada a la naturaleza del conjunto de datos.
 
 Cuando los hemos evaluado y comparado, nos hemos dado cuenta de que....
 
-Las técnicas que hemos seleccionado como las mejores han sido \textbf{Regresión Logística} y \textbf{Random Forest}. La primera porque, con unos hiperparámetros prefijados por nosotros obtuvimos muy buenos resultados y no es una técnica tan compleja como las Redes Neuronales. Las Redes Neuronales obtuvieron mejor resultado, pero con una diferencia no lo suficientemente significativa como para compensar su complejidad. En cuanto al Random Forest, obtuvimos los mejores resultados sin apenas ajustar los modelos (únicamente probamos a limitar la profundidad a 9). Sus curvas de aprendizaje no eran las mejores, sin embargo, no es un modelo tan complejo como el anterior, así que merecía la pena intentar ajustarlo mejor.
+Las técnicas que hemos seleccionado como las mejores han sido \textbf{Regresión Logística} y \textbf{Random Forest}. La primera porque,
+con unos hiperparámetros prefijados por nosotros obtuvimos muy buenos resultados y no es una técnica tan compleja como las Redes
+Neuronales. Las Redes Neuronales obtuvieron mejor resultado, pero con una diferencia no lo suficientemente significativa como para
+compensar su complejidad. En cuanto al Random Forest, obtuvimos los mejores resultados sin apenas ajustar los modelos (únicamente probamos
+a limitar la profundidad a 9). Sus curvas de aprendizaje no eran las mejores, sin embargo, no es un modelo tan complejo como el anterior,
+así que merecía la pena intentar ajustarlo mejor.
 
-Posteriormente, hemos ajustado estas dos técnicas mencionadas anteriormente. En Regresión Logística, hemos conseguido un mejor ajuste del parámetro C (con un valor de 0.5), que evita una fuerte regularización o que aparezca el sobreajuste. No obstante, en términos de precisión y desviación típica no ha mejorado al modelo inicial (95.5\% y 0.012 respectivamente), por lo que no lo seleccionaremos como el mejor. En cuanto al Random Forest, hemos conseguido ajustar un valor de profundidad $max_depth = 15$ pese a que el número de árboles que ha elegido es mayor al que asignamos inicialmente $n_estimators = 400$. Los valores de precisión y desviación típica son similares al modelo inicial (97.9\% y 0.010 respectivamente), aunque hay que tener en cuenta que los iniciales se obtuvieron sin una profundidad determinada.
+Posteriormente, hemos ajustado estas dos técnicas mencionadas anteriormente. En Regresión Logística, hemos conseguido un mejor ajuste del
+parámetro C (con un valor de 0.5), que evita una fuerte regularización o que aparezca el sobreajuste. No obstante, en términos de
+precisión y desviación típica no ha mejorado al modelo inicial (95.5\% y 0.012 respectivamente), por lo que no lo seleccionaremos como el
+mejor. En cuanto al Random Forest, hemos conseguido ajustar un valor de profundidad $max_depth = 15$ pese a que el número de árboles que
+ha elegido es mayor al que asignamos inicialmente $n_estimators = 400$. Los valores de precisión y desviación típica son similares al
+modelo inicial (97.9\% y 0.010 respectivamente), aunque hay que tener en cuenta que los iniciales se obtuvieron sin una profundidad
+determinada.
 
-Por último, hemos pasado a evaluar el mejor modelo (este último Random Forest que hemos comentado) a través del conjunto de test reservado al principio y un DummyClassifier. Gracias a esta evaluación y al posterior análisis, pudimos comprobar que, tanto la técnica elegida como el ajuste de sus hiperparámetros, lo hicimos bastante bien. Entre las 462 muestras sólo obtuvimos 6 errores. No podemos confirmar que esta sea la mejor técnica, pero gracias a todo este análisis, es bastante apropiado para resolver nuestro problema.
+Por último, hemos pasado a evaluar el mejor modelo (este último Random Forest que hemos comentado) a través del conjunto de test reservado
+al principio y un DummyClassifier. Gracias a esta evaluación y al posterior análisis, pudimos comprobar que, tanto la técnica elegida como
+el ajuste de sus hiperparámetros, lo hicimos bastante bien. Entre las 462 muestras sólo obtuvimos 6 errores. No podemos confirmar que esta
+sea la mejor técnica, pero gracias a todo este análisis, es bastante apropiado para resolver nuestro problema.
 
 \newpage
 
@@ -1007,6 +1111,14 @@ Scikit-Learn. \textit{recall\_score}
 \bibitem{bib:precision}
 Scikit-Learn. \textit{precision\_score}
 \\\url{https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_score.html}
+
+\bibitem{bib:normalize}
+\textit{Should I normalize/standardize/rescale the data?}
+\\\url{http://www.faqs.org/faqs/ai-faq/neural-nets/part2/}
+
+\bibitem{bib:pipeline}
+Scikit-Learn. \textit{5.1. Pipelines and composite estimators}
+\\\url{https://scikit-learn.org/stable/modules/compose.html}
 
 \end{thebibliography}
 
