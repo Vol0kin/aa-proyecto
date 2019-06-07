@@ -231,7 +231,7 @@ def evaluate_models(models, X, y, model_names, cv=10, metric='accuracy',
     # evaluar el modelo con todas las particiones
     # Guardar los resultados en las listas correspondientes
     for idx,model in enumerate(models):
-        results = cross_val_score(model, X, y, n_jobs=4,
+        results = cross_val_score(model, X, y,
                                   scoring=metric, cv=cv)
 
         # Guardar valor medio de los errores
@@ -426,6 +426,7 @@ print('Removing useless attributes from training and test...')
 # Crear lista de variables a eliminar
 rm_list = [2]
 
+# Eliminar variables de training y test
 X_train = np.delete(X_train, rm_list, axis=1)
 X_test = np.delete(X_test, rm_list, axis=1)
 
@@ -504,7 +505,7 @@ mlr = LogisticRegression()
 # Aplicar GridSearch con Cross Validation para determinar
 # la mejor combinacion de parametros
 grid_search = GridSearchCV(mlr, param_grid=param_grid_lr, cv=cv,
-                           n_jobs=4, scoring='accuracy')
+                           scoring='accuracy')
 
 # Aplicar GridSearch para obtener la mejor combinacion de hiperparametros
 print('Applying grid search...')
@@ -538,7 +539,7 @@ print('Creating model...')
 rf = RandomForestClassifier()
 
 grid_search2 = GridSearchCV(rf, param_grid=param_grid_rf, cv=cv,
-                            n_jobs=4, scoring='accuracy')
+                            scoring='accuracy')
 
 # Aplicar GridSearch para obtener la mejor combinacion de hiperparametros
 print('Applying grid search...')
